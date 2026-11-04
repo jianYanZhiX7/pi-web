@@ -104,7 +104,7 @@
  * (session titles) --text, labels (project names, section labels)
  * --text-muted, meta (times, counts, branches, a pinned row's project)
  * --text-dim. The accent is a state's, never a label's: the selected
- * row's bar, a run's spinner.
+ * row's bar, a run's spinner, the current project's header tint.
  */
 .session-tree-chevron {
   flex: none;
@@ -535,13 +535,26 @@ a.session-tree-main {
   background: var(--bg-hover);
 }
 
+/* The project the chat belongs to: a tint of the theme's accent behind its
+   header (blue in the default theme), so it reads without comparing the
+   name's color. Hover deepens the tint rather than turning it grey, and the
+   pick-up state of a long-press keeps its own grey. */
+.session-tree-group.is-current {
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+}
+
+.session-tree-group.is-current:hover {
+  background: color-mix(in srgb, var(--accent) 18%, transparent);
+}
+
 /* The project's name field (its menu's Rename…) in place of the header. */
 .session-tree-group.is-renaming {
   padding-left: 4px;
 }
 
 /* Picked up by a long-press, before the finger moves. */
-.session-tree-group.is-drag-armed {
+.session-tree-group.is-drag-armed,
+.session-tree-group.is-current.is-drag-armed {
   background: var(--bg-selected);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
 }
