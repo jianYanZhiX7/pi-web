@@ -1987,6 +1987,26 @@ pre, code {
   }
 }
 
+/* A message's own metadata — the model, its token counts, the time it was sent —
+   is there while the message is under the pointer, or while something in it has
+   focus, and leaves its room reserved either way so a hover never moves the text.
+   A touch screen has no pointer to hover with: it stays. */
+.message-meta {
+  opacity: 0;
+  transition: opacity 0.12s;
+}
+
+.message-hoverable:hover .message-meta,
+.message-hoverable:focus-within .message-meta {
+  opacity: 1;
+}
+
+@media (hover: none) {
+  .message-meta {
+    opacity: 1;
+  }
+}
+
 .chat-scroll-to-bottom {
   display: inline-flex;
   align-items: center;

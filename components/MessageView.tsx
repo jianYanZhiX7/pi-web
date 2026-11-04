@@ -419,6 +419,7 @@ function UserMessageView({ message, cwd, onOpenFile, entryId, onFork, forking, o
 
   return (
     <div
+      className="message-hoverable"
       style={{ marginBottom: 16, display: "flex", flexDirection: "column", alignItems: "flex-end" }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
@@ -637,7 +638,7 @@ function UserMessageView({ message, cwd, onOpenFile, entryId, onFork, forking, o
               )}
             </div>
           )}
-          {time && <span style={{ fontSize: 10, color: "var(--text-dim)" }}>{time}</span>}
+          {time && <span className="message-meta" style={{ fontSize: 10, color: "var(--text-dim)" }}>{time}</span>}
         </div>
       )}
     </div>
@@ -853,17 +854,20 @@ function AssistantMessageView({
 
   return (
     <div
+      className="message-hoverable"
       data-message-role="assistant"
       data-entry-id={entryId}
       style={{ marginBottom: 16 }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
-      <AssistantMessageHeader
-        modelName={message.provider ? getModelDisplayName(message.provider, message.model, modelNames) : undefined}
-        estimatedTokens={isStreaming ? Math.round(estimatedTokens) : 0}
-        tps={isStreaming ? tps : null}
-      />
+      <div className="message-meta">
+        <AssistantMessageHeader
+          modelName={message.provider ? getModelDisplayName(message.provider, message.model, modelNames) : undefined}
+          estimatedTokens={isStreaming ? Math.round(estimatedTokens) : 0}
+          tps={isStreaming ? tps : null}
+        />
+      </div>
 
       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
         {/* Not keyed by the entry id: a message of this run gets one when the file is
@@ -948,7 +952,7 @@ function AssistantMessageView({
         {stats.length > 0 && !isStreaming && (
           // One item per count: a single space at 11px ran them together. The
           // spaces stay in the text for copying; the flex gap draws the room.
-          <div style={{ display: "flex", flexWrap: "wrap", columnGap: 7, fontSize: 11, color: "var(--text-dim)", fontVariantNumeric: "tabular-nums" }}>
+          <div className="message-meta" style={{ display: "flex", flexWrap: "wrap", columnGap: 7, fontSize: 11, color: "var(--text-dim)", fontVariantNumeric: "tabular-nums" }}>
             {stats.map((part, index) => (
               <Fragment key={index}>{index > 0 && " "}<UsagePart part={part} /></Fragment>
             ))}
@@ -988,7 +992,7 @@ function AssistantMessageView({
           </button>
         )}
         {time && !isStreaming && (
-          <span style={{ fontSize: 10, color: "var(--text-dim)", marginLeft: "auto", whiteSpace: "nowrap" }}>{time}</span>
+          <span className="message-meta" style={{ fontSize: 10, color: "var(--text-dim)", marginLeft: "auto", whiteSpace: "nowrap" }}>{time}</span>
         )}
       </div>
     </div>

@@ -1126,3 +1126,25 @@ test("one column names a deleted file's section by its old path", () => {
   assert.ok(html.includes(">a/gone.ts<"));
   assert.ok(!html.includes("/dev/null"));
 });
+
+test("a message's model, tokens and time wait for the pointer, and stay on a touch screen", () => {
+  const assistant = renderMessage({
+    role: "assistant",
+    provider: "test",
+    model: "model",
+    timestamp: 1,
+    content: [{ type: "text", text: "Response" }],
+    usage: { input: 1200, output: 340, cacheRead: 0, cacheWrite: 0, cost: { total: 0.01 } },
+  }, { showTimestamp: true, turnDurationMs: 12_000 });
+  assert.match(assistant, /^<div class="message-hoverable" data-message-role="assistant"/);
+  // The header (model, tokens, speed), the usage line with the turn's duration, the time.
+  assert.equal(assistant.match(/class="message-meta"/g)?.length, 3);
+  const user = renderMessage({ role: "user", content: "Hi", timestamp: 1 }, { showTimestamp: true });
+  assert.match(user, /^<div class="message-hoverable"/);
+  assert.equal(user.match(/class="message-meta"/g)?.length, 1);
+
+  const css = readFileSync(new URL("../app/globals.css", import.meta.url), "utf8");
+  assert.match(css, /\.message-meta \{\s*opacity: 0;/);
+  assert.match(css, /\.message-hoverable:hover \.message-meta,\s*\n\.message-hoverable:focus-within \.message-meta \{\s*opacity: 1;/);
+  assert.match(css, /@media \(hover: none\) \{\s*\.message-meta \{\s*opacity: 1;\s*\}\s*\}/);
+});
