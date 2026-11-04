@@ -10,6 +10,8 @@ Typecheck: `node_modules/.bin/tsc --noEmit` · Lint: `npm run lint`
 
 **Never run `next build` during dev**: it pollutes `.next/` and breaks `npm run dev`.
 
+To serve this checkout as the installed `pi-web` command (acceptance checks against the built app), run `npm run install:local` (`-- --restart` also restarts the server on 30141): `scripts/install-local.mjs` builds in a copy under `<tmp>/pi-web-local-build`, so this checkout's `.next/` is never touched, and the copy includes uncommitted changes.
+
 ### Dev server troubleshooting
 
 - First run `lsof -nP -iTCP:30141 -sTCP:LISTEN` and reuse a healthy Pi Web process. A second `next dev` on another port is no workaround: both contend for `.next/dev/lock`.

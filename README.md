@@ -188,6 +188,15 @@ npm run lint
 
 Do not run `next build` or `npm run build` during normal development. It writes to `.next/` and can interfere with the development server; leave builds for release work.
 
+To run this checkout as the installed `pi-web` command (development only):
+
+```bash
+npm run install:local                # build a copy, install its tarball globally
+npm run install:local -- --restart   # …and restart the server on port 30141
+```
+
+The build runs in a copy (`<tmp>/pi-web-local-build`), so the checkout's `.next/` is untouched; uncommitted changes are included.
+
 Before starting on a feature, read [Contributing](./CONTRIBUTING.md) for what is in scope and the pull request checklist.
 
 Contributor guides: [Internationalization](./docs/i18n.md) and [Release process](./docs/release.md).
