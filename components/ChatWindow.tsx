@@ -203,11 +203,49 @@ function getUserInputText(message: AgentMessage): string | null {
   return text.length > 0 ? text : null;
 }
 
-function ProcessDetailsGroup({ messageCount, toolCallCount, durationMs, cacheMisses, defaultExpanded = false, reveal = false, children, t }: { messageCount: number; toolCallCount: number; durationMs?: number; cacheMisses?: CacheMissSummary; defaultExpanded?: boolean; reveal?: boolean; children: ReactNode; t: (key: string, params?: Record<string, string | number>) => string }) {
+// Six dots in a ring, the light travelling round: a run is under way. The
+// indicator mounts only while running, so nothing animates when it is done.
+const PROCESS_DOT_COORDINATES = [
+  [7, 2.5],
+  [10.9, 4.75],
+  [10.9, 9.25],
+  [7, 11.5],
+  [3.1, 9.25],
+  [3.1, 4.75],
+] as const;
+
+function ProcessRunningDots() {
+  return (
+    <svg className="process-dots" width="14" height="14" viewBox="0 0 14 14" aria-hidden="true" style={{ flexShrink: 0 }}>
+      {PROCESS_DOT_COORDINATES.map(([cx, cy], index) => (
+        <circle key={`${cx}-${cy}`} cx={cx} cy={cy} r="1.5" fill="currentColor" style={{ animationDelay: `${-index / PROCESS_DOT_COORDINATES.length}s` }} />
+      ))}
+    </svg>
+  );
+}
+
+function ProcessDetailsGroup({ messageCount, toolCallCount, durationMs, cacheMisses, running = false, defaultExpanded = false, reveal = false, children, t }: { messageCount: number; toolCallCount: number; durationMs?: number; cacheMisses?: CacheMissSummary; running?: boolean; defaultExpanded?: boolean; reveal?: boolean; children: ReactNode; t: (key: string, params?: Record<string, string | number>) => string }) {
   const [expanded, setExpanded] = useState(defaultExpanded);
+  const bodyRef = useRef<HTMLDivElement | null>(null);
+  // An expanded running fold follows the steps as they land, unless the reader
+  // has scrolled away from its bottom.
+  const followBottomRef = useRef(true);
+  // A fold opened by hand brings its window into view; one opened by a search
+  // hit leaves the chat where the search put it.
+  const scrollToWindowOnExpandRef = useRef(false);
   useLayoutEffect(() => {
     if (reveal) setExpanded(true);
   }, [reveal]);
+  useLayoutEffect(() => {
+    if (!scrollToWindowOnExpandRef.current) return;
+    scrollToWindowOnExpandRef.current = false;
+    bodyRef.current?.scrollIntoView({ block: "nearest" });
+  }, [expanded]);
+  useLayoutEffect(() => {
+    const body = bodyRef.current;
+    if (!running || !body || !followBottomRef.current) return;
+    body.scrollTop = body.scrollHeight;
+  }, [running, expanded, reveal, messageCount, toolCallCount]);
   // The chevron already says this folds; the words stay in the accessible name.
   const parts = [`${messageCount} ${t(messageCount === 1 ? "chat.message" : "chat.messages")}`];
   if (toolCallCount > 0) parts.push(`${toolCallCount} ${t(toolCallCount === 1 ? "chat.toolCall" : "chat.toolCalls")}`);
@@ -220,8 +258,13 @@ function ProcessDetailsGroup({ messageCount, toolCallCount, durationMs, cacheMis
       <button
         type="button"
         aria-expanded={expanded || reveal}
-        aria-label={[t("chat.processDetails"), ...parts, ...(cacheMissText ? [cacheMissText] : [])].join(" · ")}
-        onClick={() => setExpanded((v) => !v)}
+        aria-label={[t("chat.processDetails"), ...(running ? [t("chat.processRunning")] : []), ...parts, ...(cacheMissText ? [cacheMissText] : [])].join(" · ")}
+        onClick={() => setExpanded((v) => {
+          if (v) return false;
+          followBottomRef.current = true;
+          scrollToWindowOnExpandRef.current = true;
+          return true;
+        })}
         style={{
           display: "flex",
           alignItems: "center",
@@ -239,6 +282,7 @@ function ProcessDetailsGroup({ messageCount, toolCallCount, durationMs, cacheMis
         }}
         title={expanded ? t("chat.collapseProcess") : t("chat.expandProcess")}
       >
+        {running && <ProcessRunningDots />}
         <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, transform: expanded ? "rotate(90deg)" : "none", transition: "transform 0.15s" }}>
           <polyline points="4 2.5 7.5 6 4 9.5" />
         </svg>
@@ -248,7 +292,18 @@ function ProcessDetailsGroup({ messageCount, toolCallCount, durationMs, cacheMis
         </span>
       </button>
       {(expanded || reveal) && (
-        <div style={{ marginTop: 8 }}>
+        <div
+          ref={bodyRef}
+          className="process-details-window"
+          role="region"
+          aria-label={t("chat.processDetails")}
+          tabIndex={0}
+          style={{ marginTop: 8 }}
+          onScroll={(event) => {
+            const body = event.currentTarget;
+            followBottomRef.current = body.scrollHeight - body.scrollTop - body.clientHeight < 24;
+          }}
+        >
           {children}
         </div>
       )}
@@ -1224,14 +1279,10 @@ export function ChatWindow({ session, searchTarget, onSearchTargetHandled, initi
                   continue;
                 }
 
-                const isLiveTail = (sessionBusy || isStreaming) && endIdx === messages.length && userIdx === lastAnchorIdx;
-                if (isLiveTail) {
-                  for (let renderIdx = groupStartIdx; renderIdx < endIdx; renderIdx++) {
-                    rendered.push(renderMessage(renderIdx));
-                  }
-                  idx = endIdx;
-                  continue;
-                }
+                // The last turn of a live run folds like a finished one: it says
+                // it is still working, and the streaming reply stays below it,
+                // outside the fold.
+                const liveTurn = (agentRunning || isStreaming) && endIdx === messages.length && userIdx === lastAnchorIdx;
 
                 if (hasAnchor) rendered.push(renderMessage(userIdx));
 
@@ -1293,12 +1344,13 @@ export function ChatWindow({ session, searchTarget, onSearchTargetHandled, initi
                       key={`process-group-${messageKeys[groupStartIdx]}`}
                       ref={processRefIdx === undefined ? undefined : (el) => { messageRefs.current[processRefIdx] = el; }}
                     >
-                      {/* Re-key on answer availability: useState reads defaultExpanded only
-                          on mount, so a turn first rendered without an answer (expanded)
-                          would otherwise stay open once its answer shows up, e.g. when
-                          switching between an answered and an unanswered leaf of the same
-                          turn. Manual toggles survive every other re-render. */}
-                      <ProcessDetailsGroup key={answered ? "answered" : "unanswered"} messageCount={processMessageCount} toolCallCount={processToolCount} durationMs={turnDurationMs} cacheMisses={processCacheMisses} defaultExpanded={!answered} reveal={revealProcess} t={t}>
+                      {/* Re-key on answer availability and on the run ending:
+                          useState reads defaultExpanded only on mount, so a turn
+                          first rendered running (collapsed) must not keep a
+                          revealed state once it settles, and an unanswered turn
+                          must open when it stops running. Manual toggles survive
+                          every other re-render. */}
+                      <ProcessDetailsGroup key={answered ? "answered" : liveTurn ? "live" : "unanswered"} messageCount={processMessageCount} toolCallCount={processToolCount} durationMs={turnDurationMs} cacheMisses={processCacheMisses} running={liveTurn} defaultExpanded={!answered && !liveTurn} reveal={revealProcess} t={t}>
                         {processViews}
                       </ProcessDetailsGroup>
                     </div>,

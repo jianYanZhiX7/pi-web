@@ -2007,6 +2007,53 @@ pre, code {
   }
 }
 
+/* A turn's process details, open: grows with its steps and stops at a
+   readable height, then scrolls inside instead of pushing the answer down the
+   chat. No fill of its own, so the messages sit on the chat's background. */
+.process-details-window {
+  max-height: 320px;
+  padding: 10px 12px;
+  overflow-y: auto;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: transparent;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+
+@media (max-width: 640px) {
+  .process-details-window {
+    max-height: 240px;
+  }
+}
+
+.process-details-window > :last-child {
+  margin-bottom: 0;
+}
+
+.process-details-window:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Six dots the running fold leads with; each one's delay is inline, so the
+   light travels round the ring. Mounted only while the run is under way. */
+.process-dots circle {
+  animation: process-dots-fade 1.2s linear infinite;
+}
+
+@keyframes process-dots-fade {
+  0%, 100% { opacity: 0.18; }
+  18% { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .process-dots circle {
+    animation: none;
+    opacity: 0.6;
+  }
+}
+
 .chat-scroll-to-bottom {
   display: inline-flex;
   align-items: center;
