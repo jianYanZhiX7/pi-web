@@ -126,9 +126,10 @@ test("on a desktop the files sit below the sessions by default, both in view", (
   const html = render({ selectedCwd: "/work/alpha", onOpenTerminal: noop });
   assert.match(html, /^<div class="session-sidebar is-files-below" style="--sidebar-files-height:320px">/);
   // No tabs: the brand (its name says the versions a click shows), the
-  // sessions' funnel, then New and their search. No view options.
-  assert.match(html, /<div class="sidebar-header"><button type="button" class="sidebar-brand" aria-label="Pi Web, versions: web [^",]+, pi [^",]+">Pi Web<\/button><button type="button" class="sidebar-filter-toggle" aria-haspopup="menu" aria-expanded="false" aria-label="Filter sessions" title="Filter sessions">/);
-  assert.match(html, /aria-label="Filter sessions" title="Filter sessions">[\s\S]*?<\/button><span class="sidebar-header-spacer"><\/span><button type="button" class="sidebar-new-button"/);
+  // sessions' funnel (active: the list opens on the last 24 hours), then New
+  // and their search. No view options.
+  assert.match(html, /<div class="sidebar-header"><button type="button" class="sidebar-brand" aria-label="Pi Web, versions: web [^",]+, pi [^",]+">Pi Web<\/button><button type="button" class="sidebar-filter-toggle is-active" aria-haspopup="menu" aria-expanded="false" aria-label="Filter sessions" title="Sessions are filtered">/);
+  assert.match(html, /aria-label="Filter sessions" title="Sessions are filtered">[\s\S]*?<\/button><span class="sidebar-header-spacer"><\/span><button type="button" class="sidebar-new-button"/);
   assert.doesNotMatch(html, /role="tablist"|role="tab"|role="tabpanel"|View options|sidebar-title/);
   assert.match(html, /<span class="sidebar-new-label">New<\/span><\/button><button type="button" title="Search conversations" aria-label="Search conversations" aria-expanded="false" aria-controls="session-search-input" class="sidebar-search-toggle">/);
   // Two regions, both shown: the sessions, the separator, the files.

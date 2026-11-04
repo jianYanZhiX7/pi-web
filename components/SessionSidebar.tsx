@@ -79,7 +79,7 @@ import {
 import { countFaviconUnread, syncFaviconBadge } from "@/lib/favicon-badge";
 import {
   isSessionFilterActive,
-  NO_SESSION_FILTER,
+  DEFAULT_SESSION_FILTER,
   SESSION_STATUS_FILTERS,
   SESSION_TIME_FILTERS,
   type SessionFilter,
@@ -633,7 +633,7 @@ export function SessionSidebar({ selectedSessionId, onSelectSession, onNewSessio
   const [menu, setMenu] = useState<SidebarMenuState | null>(null);
   // The session list's filter: this page's alone, so a reload shows everything
   // again rather than hiding sessions someone forgot they filtered.
-  const [sessionFilter, setSessionFilter] = useState<SessionFilter>(NO_SESSION_FILTER);
+  const [sessionFilter, setSessionFilter] = useState<SessionFilter>(DEFAULT_SESSION_FILTER);
   const sessionFilterActive = isSessionFilterActive(sessionFilter);
   // A row the main tree should scroll to (a fork's new row); see
   // SessionTreeReveal. Held until the tree says it is done with it.
@@ -2642,10 +2642,12 @@ export function SessionSidebar({ selectedSessionId, onSelectSession, onNewSessio
       : status === "failed" ? t("sidebar.filterStatusFailed") : t("sidebar.filterStatusAll")
   );
   const timeFilterLabel = (time: SessionTimeFilter) => (
-    time === "today"
-      ? t("sidebar.filterToday")
-      : time === "week" ? t("sidebar.filterWeek")
-        : time === "month" ? t("sidebar.filterMonth") : t("sidebar.filterTimeAll")
+    time === "day"
+      ? t("sidebar.filterDay")
+      : time === "today"
+        ? t("sidebar.filterToday")
+        : time === "week" ? t("sidebar.filterWeek")
+          : time === "month" ? t("sidebar.filterMonth") : t("sidebar.filterTimeAll")
   );
   // One list of choices, both groups open in one menu: the filter is the pair,
   // so choosing a status must not close the menu before the time is picked.
@@ -3054,27 +3056,6 @@ export function SessionSidebar({ selectedSessionId, onSelectSession, onNewSessio
             />
           </div>
         )}
-        {sessionFilterActive && !archiveView && (
-          <div className="sidebar-filter-bar">
-            <FilterIcon size={12} />
-            <span className="sidebar-filter-summary">
-              {[
-                sessionFilter.status === "all" ? null : statusFilterLabel(sessionFilter.status),
-                sessionFilter.time === "all" ? null : timeFilterLabel(sessionFilter.time),
-              ].filter(Boolean).join(" · ")}
-            </span>
-            {model.filteredOut > 0 && (
-              <span className="sidebar-filter-count">{t("sidebar.filterHidden", { count: model.filteredOut })}</span>
-            )}
-            <button
-              type="button"
-              className="sidebar-filter-clear"
-              onClick={() => setSessionFilter(NO_SESSION_FILTER)}
-            >
-              {t("sidebar.filterClear")}
-            </button>
-          </div>
-        )}
         <SessionSearch
           open={sessionSearchOpen}
           query={sessionSearchQuery}
@@ -3091,7 +3072,7 @@ export function SessionSidebar({ selectedSessionId, onSelectSession, onNewSessio
               <SessionTree
                 {...treeProps}
                 rows={model.rows}
-                emptyLabel={sessionFilterActive ? t("sidebar.filterNoMatches") : t("sidebar.noSessions")}
+                emptyLabel={model.filteredOut > 0 ? t("sidebar.filterNoMatches") : t("sidebar.noSessions")}
                 reveal={treeReveal}
                 onRevealHandled={handleRevealHandled}
               />

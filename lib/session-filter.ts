@@ -6,7 +6,7 @@
 import type { SessionFamily } from "./session-family";
 
 export type SessionStatusFilter = "all" | "running" | "failed";
-export type SessionTimeFilter = "all" | "today" | "week" | "month";
+export type SessionTimeFilter = "all" | "day" | "today" | "week" | "month";
 
 export interface SessionFilter {
   status: SessionStatusFilter;
@@ -16,8 +16,11 @@ export interface SessionFilter {
 /** Nothing hidden: the list as it always was. */
 export const NO_SESSION_FILTER: SessionFilter = { status: "all", time: "all" };
 
+/** What the list opens on: the last 24 hours, not the whole history. */
+export const DEFAULT_SESSION_FILTER: SessionFilter = { status: "all", time: "day" };
+
 export const SESSION_STATUS_FILTERS: readonly SessionStatusFilter[] = ["all", "running", "failed"];
-export const SESSION_TIME_FILTERS: readonly SessionTimeFilter[] = ["all", "today", "week", "month"];
+export const SESSION_TIME_FILTERS: readonly SessionTimeFilter[] = ["all", "day", "today", "week", "month"];
 
 export function isSessionFilterActive(filter: SessionFilter): boolean {
   return filter.status !== "all" || filter.time !== "all";
@@ -31,6 +34,7 @@ const DAY_MS = 24 * 60 * 60 * 1000;
  */
 export function sessionFilterCutoff(time: SessionTimeFilter, now: number): number | null {
   if (time === "all") return null;
+  if (time === "day") return now - DAY_MS;
   if (time === "today") {
     const start = new Date(now);
     start.setHours(0, 0, 0, 0);
@@ -73,17 +77,4 @@ function matchesStatus(
     return runningIds.has(family.root.id) || family.subagents.some((session) => runningIds.has(session.id));
   }
   return family.root.lastReplyFailed === true;
-}
-
-/** How a filtered-out session shows nowhere else: the list's own count. */
-export function countHiddenFamilies(
-  families: readonly Pick<SessionFamily, "root" | "subagents" | "latestModified">[],
-  filter: SessionFilter,
-  context: SessionFilterContext,
-): number {
-  if (!isSessionFilterActive(filter)) return 0;
-  return families.reduce(
-    (hidden, family) => hidden + (familyMatchesSessionFilter(family, filter, context) ? 0 : 1),
-    0,
-  );
 }

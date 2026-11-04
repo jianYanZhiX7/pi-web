@@ -65,8 +65,7 @@ const serverExit = once(server, "exit");
 
 /**
  * One pass over the funnel: the open chat is the old, finished one, so every
- * step also proves it stays listed whatever the filter says (the bar's hidden
- * count says how many the filter really removed).
+ * step also proves it stays listed whatever the filter says.
  */
 async function checkFilter(page, screenshotPrefix) {
   // Running comes from the sidebar's poll, not from this tab's chat.
@@ -102,11 +101,17 @@ async function checkFilter(page, screenshotPrefix) {
   const row = (name) => rows.filter({ has: page.locator(".session-tree-title", { hasText: new RegExp(`^${name}$`) }) });
   const visible = async () => (await rows.locator(".session-tree-title").allInnerTexts()).map((title) => title.trim()).sort();
   const sorted = (...labels) => [...labels].sort();
-  for (const name of Object.values(names)) await row(name).first().waitFor();
-  assert.deepEqual(await visible(), sorted(...Object.values(names)), "every session shows without a filter");
+  const filterButton = page.getByRole("button", { name: "Filter sessions", exact: true });
+  // The list opens on the last 24 hours: today's two runs and the open chat,
+  // which stays listed whatever the filter says; the 20-day-old failure is
+  // hidden. The funnel says the list is filtered; no bar repeats it.
+  for (const name of [names.failed, names.done, names.oldDone]) await row(name).first().waitFor();
+  assert.deepEqual(await visible(), sorted(names.failed, names.done, names.oldDone), "the default window is the last 24 hours, plus the selected chat");
+  assert.match(await filterButton.getAttribute("class"), /\bis-active\b/);
+  assert.equal(await panel.locator(".sidebar-filter-bar").count(), 0);
 
   const openMenu = async () => {
-    await page.getByRole("button", { name: "Filter sessions", exact: true }).click();
+    await filterButton.click();
     const menu = page.getByRole("menu");
     await menu.waitFor();
     return menu;
@@ -117,24 +122,19 @@ async function checkFilter(page, screenshotPrefix) {
     await menu.getByRole("menuitemradio", { name: label, exact: true }).click();
   };
   const closeMenu = () => page.keyboard.press("Escape");
-  const bar = panel.locator(".sidebar-filter-bar");
 
   // A failed reply is a status of its own; the menu stays open for the window.
   await openMenu();
   await pick("Failed");
   await row(names.failed).first().waitFor();
-  assert.deepEqual(await visible(), sorted(names.failed, names.oldFailed, names.oldDone), "the selected chat stays listed");
+  assert.deepEqual(await visible(), sorted(names.failed, names.oldDone), "the status narrows within the window; the selected chat stays listed");
   await page.screenshot({ path: join(artifacts, `${screenshotPrefix}-menu.png`) });
-  await pick("Today");
   await closeMenu();
-  await bar.waitFor();
-  assert.match(await bar.innerText(), /Failed/);
-  assert.match(await bar.innerText(), /2 hidden/);
   assert.deepEqual(await visible(), sorted(names.failed, names.oldDone));
   await page.screenshot({ path: join(artifacts, `${screenshotPrefix}-active.png`) });
 
-  // The window is rolling: a 20-day-old failure leaves the last 7 days, and
-  // comes back in the last 30.
+  // The window is rolling: a 20-day-old failure leaves the last 7 days and the
+  // last 24 hours, and comes back in the last 30.
   await openMenu();
   await pick("Last 7 days");
   await closeMenu();
@@ -144,6 +144,10 @@ async function checkFilter(page, screenshotPrefix) {
   await closeMenu();
   await row(names.oldFailed).first().waitFor();
   assert.deepEqual(await visible(), sorted(names.failed, names.oldFailed, names.oldDone));
+  await openMenu();
+  await pick("Last 24 hours");
+  await closeMenu();
+  assert.deepEqual(await visible(), sorted(names.failed, names.oldDone));
 
   // Status "All" keeps the window: today's two runs only, plus the open chat.
   await openMenu();
@@ -161,12 +165,16 @@ async function checkFilter(page, screenshotPrefix) {
   await row(names.done).first().waitFor();
   assert.deepEqual(await visible(), sorted(names.done, names.oldDone));
 
-  // Clearing brings every row back.
+  // Clearing in the menu (status All, any time) brings every row back, and the
+  // funnel drops its active state.
   runningIds = [];
-  await bar.getByRole("button", { name: "Clear filter", exact: true }).click();
-  await bar.waitFor({ state: "detached" });
+  await openMenu();
+  await pick("All");
+  await pick("Any time");
+  await closeMenu();
   for (const name of Object.values(names)) await row(name).first().waitFor();
   assert.deepEqual(await visible(), sorted(...Object.values(names)));
+  assert.doesNotMatch(await filterButton.getAttribute("class"), /\bis-active\b/);
   assert.deepEqual(errors, []);
 }
 
@@ -182,7 +190,7 @@ try {
   const context = await browser.newContext({ viewport: { width: 1280, height: 800 }, locale: "en-US" });
   await checkFilter(await context.newPage(), "filter-desktop");
   await context.close();
-  console.log("PASS: session filter by status and window, hidden count, running and clear (desktop)");
+  console.log("PASS: session filter by status and window, running and clear (desktop)");
 
   // The header row is the tightest on a phone: the funnel must still fit and open there.
   const phone = await browser.newContext({ viewport: { width: 390, height: 844 }, locale: "en-US", isMobile: true, hasTouch: true });
