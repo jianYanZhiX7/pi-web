@@ -2698,13 +2698,6 @@ span.token.table {
   }
 }
 
-/* A composer too narrow for the run's button labels, with a panel open beside
-   it: icons only, so the draft keeps the width. A stacked composer has its own
-   row for them and is not a container. */
-.chat-composer-row {
-  container-type: inline-size;
-}
-
 /*
  * The composer is the one surface the page raises rather than draws: a soft
  * contact shadow instead of a border that has to fight the page for attention.
@@ -2745,11 +2738,6 @@ span.token.table {
   border: 0;
   box-shadow: none;
   background: transparent;
-}
-@container (max-width: 480px) {
-  .chat-composer-run-label {
-    display: none;
-  }
 }
 
 /* While the software keyboard is up (set by useViewportHeight), only a few
