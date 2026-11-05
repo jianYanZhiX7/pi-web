@@ -195,7 +195,6 @@ interface Props {
   message: AgentMessage;
   isStreaming?: boolean;
   toolResults?: Map<string, ToolResultMessage>;
-  modelNames?: Record<string, string>;
   cwd?: string;
   onOpenFile?: (filePath: string, page?: number) => void;
   onOpenSubagent?: (sessionId: string, label: string) => void;
@@ -221,25 +220,6 @@ interface Props {
   onCompact?: () => void;
   isCompacting?: boolean;
   compactError?: string | null;
-}
-
-export function getModelDisplayName(
-  provider: string,
-  responseModel: string,
-  modelNames?: Record<string, string>,
-): string {
-  const normalizedProvider = provider.toLowerCase();
-  const normalizedResponse = responseModel.toLowerCase();
-  const configured = Object.entries(modelNames ?? {}).flatMap(([key, name]) => {
-    const separator = key.indexOf(":");
-    return separator > 0 && key.slice(0, separator).toLowerCase() === normalizedProvider
-      ? [{ id: key.slice(separator + 1).toLowerCase(), name }]
-      : [];
-  });
-  return configured.find((model) => model.id === normalizedResponse)?.name
-    ?? configured.find((model) => normalizedResponse.endsWith(`/${model.id}`))?.name
-    ?? Object.entries(modelNames ?? {}).find(([key]) => key.toLowerCase() === normalizedResponse)?.[1]
-    ?? `${provider}/${responseModel}`;
 }
 
 function formatTime(ts?: number): string | null {
@@ -288,12 +268,12 @@ function haveSameRelevantToolResults(
   return true;
 }
 
-export const MessageView = memo(function MessageView({ message, isStreaming, toolResults, modelNames, cwd, onOpenFile, onOpenSubagent, entryId, searchBlock, onFork, forking, onEditContent, onCancelEdit, isEditing, showTimestamp, prevTimestamp, sessionId, writtenFiles, turnDurationMs, onCompact, isCompacting, compactError }: Props) {
+export const MessageView = memo(function MessageView({ message, isStreaming, toolResults, cwd, onOpenFile, onOpenSubagent, entryId, searchBlock, onFork, forking, onEditContent, onCancelEdit, isEditing, showTimestamp, prevTimestamp, sessionId, writtenFiles, turnDurationMs, onCompact, isCompacting, compactError }: Props) {
   if (message.role === "user") {
     return <UserMessageView message={message as UserMessage} cwd={cwd} onOpenFile={onOpenFile} entryId={entryId} onFork={onFork} forking={forking} onEditContent={onEditContent} onCancelEdit={onCancelEdit} isEditing={isEditing} />;
   }
   if (message.role === "assistant") {
-    return <AssistantMessageView message={message as AssistantMessage} isStreaming={isStreaming} toolResults={toolResults} modelNames={modelNames} cwd={cwd} onOpenFile={onOpenFile} onOpenSubagent={onOpenSubagent} showTimestamp={showTimestamp} prevTimestamp={prevTimestamp} sessionId={sessionId} entryId={entryId} searchBlock={searchBlock} writtenFiles={writtenFiles} turnDurationMs={turnDurationMs} onCompact={onCompact} isCompacting={isCompacting} compactError={compactError} />;
+    return <AssistantMessageView message={message as AssistantMessage} isStreaming={isStreaming} toolResults={toolResults} cwd={cwd} onOpenFile={onOpenFile} onOpenSubagent={onOpenSubagent} showTimestamp={showTimestamp} prevTimestamp={prevTimestamp} sessionId={sessionId} entryId={entryId} searchBlock={searchBlock} writtenFiles={writtenFiles} turnDurationMs={turnDurationMs} onCompact={onCompact} isCompacting={isCompacting} compactError={compactError} />;
   }
   if (message.role === "toolResult") {
     // Rendered inline under its toolCall — skip standalone rendering if paired
@@ -313,7 +293,6 @@ export const MessageView = memo(function MessageView({ message, isStreaming, too
   return prev.message === next.message
     && prev.isStreaming === next.isStreaming
     && haveSameRelevantToolResults(prev.message, prev.toolResults, next.toolResults)
-    && prev.modelNames === next.modelNames
     && prev.cwd === next.cwd
     && prev.onOpenFile === next.onOpenFile
     && prev.onOpenSubagent === next.onOpenSubagent
@@ -645,8 +624,7 @@ function UserMessageView({ message, cwd, onOpenFile, entryId, onFork, forking, o
   );
 }
 
-export function AssistantMessageHeader({ modelName, estimatedTokens = 0, tps = null }: {
-  modelName?: string;
+export function AssistantMessageHeader({ estimatedTokens = 0, tps = null }: {
   estimatedTokens?: number;
   tps?: number | null;
 }) {
@@ -654,7 +632,6 @@ export function AssistantMessageHeader({ modelName, estimatedTokens = 0, tps = n
   const bg = tps !== null ? (tps >= 50 ? "#53b3cb" : tps >= 30 ? "#9bc53d" : tps >= 15 ? "#f9c22e" : "#e01a4f") : undefined;
   return (
     <div style={{ fontSize: 11, lineHeight: 1.5, minHeight: "calc(1.5em + 2px)", color: "var(--text-dim)", marginBottom: 4, display: "flex", alignItems: "center", gap: 6, fontVariantNumeric: "tabular-nums" }}>
-      {modelName && <span style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{modelName}</span>}
       {estimatedTokens > 0 && (
         <span style={{ display: "flex", alignItems: "center", gap: 4, flexShrink: 0, whiteSpace: "nowrap", color: "var(--text)" }} title={t("i18n.estimatedTokens")}>
           <span style={{ display: "flex", alignItems: "center", gap: 2, fontSize: 11, fontWeight: 400 }}>
@@ -679,7 +656,6 @@ function AssistantMessageView({
   message,
   isStreaming,
   toolResults,
-  modelNames,
   cwd,
   onOpenFile,
   onOpenSubagent,
@@ -697,7 +673,6 @@ function AssistantMessageView({
   message: AssistantMessage;
   isStreaming?: boolean;
   toolResults?: Map<string, ToolResultMessage>;
-  modelNames?: Record<string, string>;
   cwd?: string;
   onOpenFile?: (filePath: string, page?: number) => void;
   onOpenSubagent?: (sessionId: string, label: string) => void;
@@ -863,7 +838,6 @@ function AssistantMessageView({
     >
       <div className="message-meta">
         <AssistantMessageHeader
-          modelName={message.provider ? getModelDisplayName(message.provider, message.model, modelNames) : undefined}
           estimatedTokens={isStreaming ? Math.round(estimatedTokens) : 0}
           tps={isStreaming ? tps : null}
         />

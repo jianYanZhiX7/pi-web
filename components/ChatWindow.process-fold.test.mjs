@@ -63,11 +63,38 @@ test("an open running window follows the steps unless the reader scrolled up", (
   // Opening by hand brings the fixed window into view; a search hit leaves the
   // chat where the search put it.
   assert.match(source, /bodyRef\.current\?\.scrollIntoView\(\{ block: "nearest" \}\);/);
+  // Content that grows between steps (a running tool's output, a thinking
+  // block the reader expands, streamed text in a step) also follows.
+  assert.match(source, /if \(followBottomRef\.current\) body\.scrollTop = body\.scrollHeight;/);
+  assert.match(source, /const observer = new MutationObserver\(follow\);/);
+  assert.match(source, /observer\.observe\(body, \{ childList: true, subtree: true, characterData: true \}\);/);
+});
+
+test("the running fold ticks its elapsed time and last window's tokens, red under the threshold", () => {
+  // One tick a second while a run is under way; the steps are the same elements.
+  assert.match(source, /if \(!running\) return;\s*\n\s*setNow\(Date\.now\(\)\);\s*\n\s*const timer = setInterval\(\(\) => setNow\(Date\.now\(\)\), 1000\);/);
+  assert.match(source, /running && liveStartedAt !== undefined/);
+  assert.match(source, /throughput\.tokensInWindow\(now\)/);
+  assert.match(source, /warning: stallGauge && isThroughputStalled\(throughput, now\)/);
+  assert.match(source, /const PROCESS_STALL_COLOR = "#ef4444";/);
+  // The live numbers join the accessible name of the button like the rest of the line.
+  assert.match(source, /const parts = segments\.map\(\(segment\) => segment\.text\);/);
+  assert.match(source, /\.\.\.parts, \.\.\.\(cacheMissText/);
+  // Tools, a compaction and an extension's question pause the model: no red then.
+  assert.match(source, /const liveStallGauge = !isCompacting && !extensionDialog && agentPhase\?\.kind !== "running_tools";/);
+  assert.match(source, /stallGauge=\{liveStallGauge\}/);
+  // A turn's start on the browser's clock: our own bubble's stamp, or pi's moved
+  // onto it by the offset the state read measured.
+  assert.match(source, /return entryId \? toBrowserClock\(timestamp\) : timestamp;/);
+  assert.match(source, /liveStartedAt=\{liveTurn && hasAnchor \? liveTurnStartedAtMs\(messages\[userIdx\], entryIds\[userIdx\]\) : undefined\}/);
 });
 
 test("the running fold's accessible name is translated everywhere", async () => {
   for (const locale of locales) {
     const messages = await readFile(new URL(`../lib/i18n/messages/${locale}.ts`, import.meta.url), "utf8");
     assert.match(messages, /"chat\.processRunning":/, `${locale} carries the running fold's name`);
+    assert.match(messages, /"chat\.liveTurnDuration":/, `${locale} carries the live elapsed time`);
+    assert.match(messages, /"chat\.liveTokens":/, `${locale} carries the live window's token count`);
+    assert.match(messages, /"chat\.liveTokensHint":/, `${locale} carries the threshold hint`);
   }
 });

@@ -17,7 +17,6 @@ const {
   PatchDiffFiles,
   ThinkingBlock,
   formatToolDuration,
-  getModelDisplayName,
   getTokenEstimateText,
   getToolCallInputText,
   replaceUserMessageText,
@@ -53,13 +52,12 @@ test("on a narrow phone a message's actions drop their labels and keep their tit
   assert.match(css, /@media \(max-width: 380px\) \{\s*\.message-action-label \{\s*display: none;\s*\}\s*\}/);
 });
 
-test("streaming headers preserve counts and speed without showing empty metrics", () => {
+test("streaming headers keep counts and speed, and never name the model", () => {
   const renderHeader = (props) => renderToStaticMarkup(React.createElement(
-    I18nProvider, null, React.createElement(AssistantMessageHeader, { modelName: "Test Model", ...props }),
+    I18nProvider, null, React.createElement(AssistantMessageHeader, props),
   ));
   for (const props of [{}, { estimatedTokens: 0, tps: 20 }]) {
     const html = renderHeader(props);
-    assert.match(html, />Test Model<\/span>/);
     assert.doesNotMatch(html, /t\/s|Estimated token count while streaming/);
   }
   const tokensOnly = renderHeader({ estimatedTokens: 100 });
@@ -71,19 +69,9 @@ test("streaming headers preserve counts and speed without showing empty metrics"
 
   const message = { role: "assistant", provider: "test", model: "model", content: [{ type: "text", text: "Response" }] };
   const complete = renderMessage(message);
+  assert.doesNotMatch(complete, /test\/model/);
   assert.doesNotMatch(complete, /Estimated token count while streaming/);
   assert.match(renderMessage(message, { isStreaming: true }), /Estimated token count while streaming/);
-});
-
-test("matches response model aliases and otherwise includes the provider", () => {
-  const names = {
-    "gateway:claude-sonnet-5": "Sonnet 5",
-    "custom-api:GLM-5.3": "GLM 5.3",
-  };
-
-  assert.equal(getModelDisplayName("gateway", "anthropic/claude-sonnet-5", names), "Sonnet 5");
-  assert.equal(getModelDisplayName("CUSTOM-API", "glm-5.3", names), "GLM 5.3");
-  assert.equal(getModelDisplayName("gateway", "unknown-model", names), "gateway/unknown-model");
 });
 
 test("previews the first thinking line and reveals the full text with the saved default", () => {
@@ -1127,7 +1115,7 @@ test("one column names a deleted file's section by its old path", () => {
   assert.ok(!html.includes("/dev/null"));
 });
 
-test("a message's model, tokens and time wait for the pointer, and stay on a touch screen", () => {
+test("a message's streaming metrics and time wait for the pointer, and stay on a touch screen", () => {
   const assistant = renderMessage({
     role: "assistant",
     provider: "test",
@@ -1137,7 +1125,7 @@ test("a message's model, tokens and time wait for the pointer, and stay on a tou
     usage: { input: 1200, output: 340, cacheRead: 0, cacheWrite: 0, cost: { total: 0.01 } },
   }, { showTimestamp: true, turnDurationMs: 12_000 });
   assert.match(assistant, /^<div class="message-hoverable" data-message-role="assistant"/);
-  // The header (model, tokens, speed), the usage line with the turn's duration, the time.
+  // The header (streaming tokens and speed), the usage line with the turn's duration, the time.
   assert.equal(assistant.match(/class="message-meta"/g)?.length, 3);
   const user = renderMessage({ role: "user", content: "Hi", timestamp: 1 }, { showTimestamp: true });
   assert.match(user, /^<div class="message-hoverable"/);

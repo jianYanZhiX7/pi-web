@@ -315,7 +315,12 @@ test("live detail and state routes work without a persisted JSONL file", async (
   assert.equal(typeof detail.info.projectKey, "string");
   assert.deepEqual(detail.context.messages.map((message) => message.content), ["hello live"]);
   assert.equal(stateResponse.status, 200);
-  assert.deepEqual(await stateResponse.json(), {
+  const state = await stateResponse.json();
+  // `now` is the server's clock, read for the browser's offset (lib/server-clock.ts).
+  assert.equal(typeof state.now, "number");
+  assert.ok(Math.abs(state.now - Date.now()) < 60_000);
+  delete state.now;
+  assert.deepEqual(state, {
     running: true,
     state: { isStreaming: true },
   });

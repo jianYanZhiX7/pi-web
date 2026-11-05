@@ -24,6 +24,7 @@ function setup() {
     lastStopReasonRef: { current: "error" },
     setRetryInfo: (value) => { banner.current = value; },
     cancelEventStreamGrace() {}, setAgentRunning() {}, setAgentPhase() {}, dispatch() {}, markPromptLanded() {},
+    turnThroughput: { reset() {} },
   });
   return { handle: handler.runInContext(context), banner };
 }

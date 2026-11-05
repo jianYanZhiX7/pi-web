@@ -67,6 +67,8 @@ import {
   createStreamingStore,
   type ClientAssistantMessageEvent,
 } from "@/lib/streaming-message";
+import { createTokenThroughput } from "@/lib/token-throughput";
+import { recordServerNow } from "@/lib/server-clock";
 
 export interface SessionData {
   sessionId: string;
@@ -441,6 +443,9 @@ export function useAgentSession(opts: UseAgentSessionOptions) {
   // Outside React state: a streamed chunk must not re-render the whole chat (see StreamingStore).
   const [streamingStore] = useState(createStreamingStore);
   const dispatch = streamingStore.dispatch;
+  // Outside React state: the live turn's row samples it once a second
+  // (lib/token-throughput.ts).
+  const [turnThroughput] = useState(() => createTokenThroughput(Date.now()));
   const [agentRunning, setAgentRunning] = useState(false);
   const [bashRunning, setBashRunning] = useState(false);
   const [pendingBash, setPendingBash] = useState<{ command: string; excludeFromContext: boolean } | null>(null);
@@ -921,7 +926,9 @@ export function useAgentSession(opts: UseAgentSessionOptions) {
         const usageRequestId = ++contextUsageRequestIdRef.current;
         const stateRes = await fetch(`/api/sessions/${encodeURIComponent(sid)}/state`);
         if (!stateRes.ok) throw new Error(`HTTP ${stateRes.status}`);
-        const agentState = await stateRes.json() as { running: boolean; state?: AgentStateResponse };
+        const agentState = await stateRes.json() as { running: boolean; state?: AgentStateResponse; now?: number };
+        // The server's clock for pi's timestamps (lib/server-clock.ts).
+        if (typeof agentState.now === "number") recordServerNow(agentState.now);
         if (sessionIdRef.current !== sid) return null;
 
         const liveState = agentState.state;
@@ -1773,6 +1780,9 @@ export function useAgentSession(opts: UseAgentSessionOptions) {
           sdkAgentActiveRef.current = true;
           agentRunningRef.current = true;
           setAgentRunning(true);
+          // A page joining a run counts its window from now: the stream it
+          // missed already contains that run's tokens.
+          turnThroughput.reset(Date.now());
           // The server replays every tool call still running right after this
           // event, so start from none: a call that ended while the stream was
           // down must not stay listed.
@@ -1795,6 +1805,7 @@ export function useAgentSession(opts: UseAgentSessionOptions) {
         // successful auto_retry_end comes only with the retry's first complete
         // reply, which can stream for minutes.
         setRetryInfo(null);
+        turnThroughput.reset(Date.now());
         dispatch({ type: "start" });
         break;
       case "agent_end":
@@ -1895,6 +1906,9 @@ export function useAgentSession(opts: UseAgentSessionOptions) {
           const delta = event.assistantMessageEvent as ClientAssistantMessageEvent | undefined;
           if (delta) {
             dispatch({ type: "delta", event: delta });
+            if (delta.type === "text_delta" || delta.type === "thinking_delta" || delta.type === "toolcall_delta") {
+              turnThroughput.addText(delta.delta, Date.now());
+            }
             if (delta.type !== "toolcall_start" && delta.type !== "toolcall_delta") {
               setAgentPhase(null);
             }
@@ -2061,7 +2075,7 @@ export function useAgentSession(opts: UseAgentSessionOptions) {
         setExtensionDialogs((queue) => removeExtensionUiRequest(queue, event.id as string));
         break;
     }
-  }, [addNotice, applyLiveUsage, cancelEventStreamGrace, dispatch, handleExtensionUiRequest, loadSession, markPromptLanded, notifyPromptStage, onAgentEnd, onToolEnd, refreshContextUsage, runOutcomeFailed, scheduleEventStreamClose, scrollToBottom, settleUiStage, syncLiveModel]);
+  }, [addNotice, applyLiveUsage, cancelEventStreamGrace, dispatch, handleExtensionUiRequest, loadSession, markPromptLanded, notifyPromptStage, onAgentEnd, onToolEnd, refreshContextUsage, runOutcomeFailed, scheduleEventStreamClose, scrollToBottom, settleUiStage, syncLiveModel, turnThroughput]);
   handleAgentEventRef.current = handleAgentEvent;
 
   const handleSend = useCallback(async (message: string, images?: AttachedImage[]) => {
@@ -2120,6 +2134,7 @@ export function useAgentSession(opts: UseAgentSessionOptions) {
     agentRunningRef.current = true;
     setAgentRunning(true);
     setAgentPhase(isSlashCommandPrompt ? { kind: "running_command" } : { kind: "waiting_model" });
+    turnThroughput.reset(Date.now());
     dispatch({ type: "start" });
     pendingScrollToUserRef.current = true;
     setPromptAnchorActive(true);
@@ -2234,7 +2249,7 @@ export function useAgentSession(opts: UseAgentSessionOptions) {
       setAgentPhase(null);
       dispatch({ type: "end" });
     }
-  }, [isNew, newSessionCwd, newSessionModel, session, ensureNewSession, ensureEventsConnected, promoteNewSession, waitForPromptSettlement, addNotice, releaseUnconfirmedSend, cancelEventStreamGrace, closeEvents, composerDraftKey, dispatch, reconcileAgentState, restoreSubmission, editEntryId, setEdit]);
+  }, [isNew, newSessionCwd, newSessionModel, session, ensureNewSession, ensureEventsConnected, promoteNewSession, waitForPromptSettlement, addNotice, releaseUnconfirmedSend, cancelEventStreamGrace, closeEvents, composerDraftKey, dispatch, reconcileAgentState, restoreSubmission, editEntryId, setEdit, turnThroughput]);
 
   const executeBash = useCallback(async (command: string, excludeFromContext: boolean) => {
     if (agentRunningRef.current || bashRunningRef.current) return;
@@ -3011,6 +3026,8 @@ export function useAgentSession(opts: UseAgentSessionOptions) {
         setAgentRunning(true);
         setAgentPhase((prev) => runStatePhase(prev, agentState.state?.isStreaming === true));
         dispatch({ type: "resume" });
+        // Joining a run already under way: its window counts from this page.
+        turnThroughput.reset(Date.now());
         if (!agentState.state.isStreaming && agentState.state.isPromptRunning) {
           void waitForPromptSettlement(sid);
         }
@@ -3028,7 +3045,7 @@ export function useAgentSession(opts: UseAgentSessionOptions) {
       if (agentState.state.extensionWidgets !== undefined) setExtensionWidgets(agentState.state.extensionWidgets ?? []);
       if (agentState.state.queuedMessages !== undefined) setQueuedMessages(normalizeQueuedMessages(agentState.state.queuedMessages));
     }
-  }, [dispatch, loadTools, waitForBashSettlement, waitForPromptSettlement]);
+  }, [dispatch, loadTools, turnThroughput, waitForBashSettlement, waitForPromptSettlement]);
 
   // Open a released stream again and read what it missed (a run another tab, a
   // device or an extension started or finished, statuses), shown as the mount
@@ -3359,7 +3376,7 @@ export function useAgentSession(opts: UseAgentSessionOptions) {
 
   return {
     // State
-    data, loading, error, activeLeafId, messages, activeToolResults, entryIds, messageKeys, historyCursor, hasEarlierMessages, earlierTurnCount, streamingStore,
+    data, loading, error, activeLeafId, messages, activeToolResults, entryIds, messageKeys, historyCursor, hasEarlierMessages, earlierTurnCount, streamingStore, turnThroughput,
     agentRunning, modelNames, modelList, modelError, missingCwd, modelScopeWarnings, isModelScopeActive, allModelList, modelThinkingLevels, modelThinkingLevelMaps, newSessionModel, toolPreset, thinkingLevel,
     retryInfo, contextUsage, systemPrompt, forkingEntryId,
     isCompacting, compactError, compactResult, currentModel, displayModel, modelSwitching, sessionStats, autoCompactionEnabled,

@@ -12,6 +12,8 @@ import { collapsesProcessDetails, countToolCallBlocks, getDisplayableAssistantBl
 import { extractTurnWrittenFiles, type WrittenFile } from "@/lib/turn-written-files";
 import { getFinalAnswerViews, keepWrittenFiles, type FinalAnswerViews } from "@/lib/turn-views";
 import { formatTurnDuration, getTurnDurationMs } from "@/lib/turn-duration";
+import { toBrowserClock } from "@/lib/server-clock";
+import { isThroughputStalled, type TokenThroughput } from "@/lib/token-throughput";
 import { buildQuotedSelection } from "@/lib/quoted-selection";
 import { dropMentionText, splitDroppedItems, uploadFiles, type DroppedItem } from "@/lib/file-upload-client";
 import { MessageView } from "./MessageView";
@@ -32,7 +34,7 @@ import type { SessionStatsInfo } from "@/lib/pi-types";
 import type { DebugClientSession } from "@/lib/debug-types";
 import type { ToolEntry } from "@/lib/tool-presets";
 import type { SettingsSection } from "@/lib/settings-navigation";
-import { getTranscriptNotices, summarizeCacheMisses, type CacheMissSummary } from "@/lib/transcript-notices";
+import { formatNoticeTokens, getTranscriptNotices, summarizeCacheMisses, type CacheMissSummary } from "@/lib/transcript-notices";
 import { cacheMissSummaryText, TRANSCRIPT_NOTICE_WARNING_COLOR, TranscriptNoticeLines } from "@/components/TranscriptNotices";
 import { findChatScrollAnchor, type ChatScrollPosition } from "@/lib/chat-scroll-position";
 import {
@@ -133,6 +135,17 @@ function getUserInputText(message: AgentMessage): string | null {
   return text.length > 0 ? text : null;
 }
 
+/**
+ * The live turn's start on the browser's clock. A bubble this page sent carries
+ * the browser's stamp; one read from the session file carries pi's, which the
+ * server clock (`lib/server-clock.ts`) moves onto the browser's clock.
+ */
+function liveTurnStartedAtMs(anchor: AgentMessage, entryId: string | undefined): number | undefined {
+  const timestamp = (anchor as { timestamp?: unknown }).timestamp;
+  if (typeof timestamp !== "number" || !Number.isFinite(timestamp)) return undefined;
+  return entryId ? toBrowserClock(timestamp) : timestamp;
+}
+
 // Six dots in a ring, the light travelling round: a run is under way. The
 // indicator mounts only while running, so nothing animates when it is done.
 const PROCESS_DOT_COORDINATES = [
@@ -143,6 +156,8 @@ const PROCESS_DOT_COORDINATES = [
   [3.1, 9.25],
   [3.1, 4.75],
 ] as const;
+// The live window's shortfall: the model is not putting out tokens.
+const PROCESS_STALL_COLOR = "#ef4444";
 
 function ProcessRunningDots() {
   return (
@@ -154,7 +169,7 @@ function ProcessRunningDots() {
   );
 }
 
-function ProcessDetailsGroup({ messageCount, toolCallCount, durationMs, cacheMisses, running = false, defaultExpanded = false, reveal = false, children, t }: { messageCount: number; toolCallCount: number; durationMs?: number; cacheMisses?: CacheMissSummary; running?: boolean; defaultExpanded?: boolean; reveal?: boolean; children: ReactNode; t: (key: string, params?: Record<string, string | number>) => string }) {
+function ProcessDetailsGroup({ messageCount, toolCallCount, durationMs, liveStartedAt, throughput, stallGauge = true, cacheMisses, running = false, defaultExpanded = false, reveal = false, children, t }: { messageCount: number; toolCallCount: number; durationMs?: number; liveStartedAt?: number; throughput?: TokenThroughput; stallGauge?: boolean; cacheMisses?: CacheMissSummary; running?: boolean; defaultExpanded?: boolean; reveal?: boolean; children: ReactNode; t: (key: string, params?: Record<string, string | number>) => string }) {
   const [expanded, setExpanded] = useState(defaultExpanded);
   const bodyRef = useRef<HTMLDivElement | null>(null);
   // An expanded running fold follows the steps as they land, unless the reader
@@ -176,10 +191,48 @@ function ProcessDetailsGroup({ messageCount, toolCallCount, durationMs, cacheMis
     if (!running || !body || !followBottomRef.current) return;
     body.scrollTop = body.scrollHeight;
   }, [running, expanded, reveal, messageCount, toolCallCount]);
+  // The window's content grows between steps too: a running tool's output, a
+  // thinking block the reader expands, streamed text that lands in a step.
+  // While the reader is at the bottom, every change follows the newest line.
+  useEffect(() => {
+    const body = bodyRef.current;
+    if (!running || !body || !(expanded || reveal)) return;
+    const follow = () => {
+      if (followBottomRef.current) body.scrollTop = body.scrollHeight;
+    };
+    follow();
+    if (typeof MutationObserver === "undefined") return;
+    const observer = new MutationObserver(follow);
+    observer.observe(body, { childList: true, subtree: true, characterData: true });
+    return () => observer.disconnect();
+  }, [running, expanded, reveal]);
+  // The live line's numbers tick once a second; the steps below are the same
+  // elements on every tick, so nothing inside the fold re-renders with them.
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    if (!running) return;
+    setNow(Date.now());
+    const timer = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(timer);
+  }, [running]);
   // The chevron already says this folds; the words stay in the accessible name.
-  const parts = [`${messageCount} ${t(messageCount === 1 ? "chat.message" : "chat.messages")}`];
-  if (toolCallCount > 0) parts.push(`${toolCallCount} ${t(toolCallCount === 1 ? "chat.toolCall" : "chat.toolCalls")}`);
-  if (durationMs !== undefined) parts.push(t("chat.turnDuration", { time: formatTurnDuration(durationMs) }));
+  const segments: { text: string; warning?: boolean; title?: string }[] = [];
+  // Running: what the turn has taken and what the model put out in the last
+  // window, before anything it has counted.
+  if (running && liveStartedAt !== undefined) {
+    segments.push({ text: t("chat.liveTurnDuration", { time: formatTurnDuration(Math.max(0, now - liveStartedAt)) }) });
+  }
+  if (running && throughput) {
+    segments.push({
+      text: t("chat.liveTokens", { count: formatNoticeTokens(Math.round(throughput.tokensInWindow(now))) }),
+      warning: stallGauge && isThroughputStalled(throughput, now),
+      title: t("chat.liveTokensHint"),
+    });
+  }
+  segments.push({ text: `${messageCount} ${t(messageCount === 1 ? "chat.message" : "chat.messages")}` });
+  if (toolCallCount > 0) segments.push({ text: `${toolCallCount} ${t(toolCallCount === 1 ? "chat.toolCall" : "chat.toolCalls")}` });
+  if (durationMs !== undefined) segments.push({ text: t("chat.turnDuration", { time: formatTurnDuration(durationMs) }) });
+  const parts = segments.map((segment) => segment.text);
   // Folded, the cache misses inside are added up here (#1265); open, each shows under its step.
   const cacheMissText = cacheMisses && !(expanded || reveal) ? cacheMissSummaryText(t, cacheMisses) : undefined;
 
@@ -217,7 +270,14 @@ function ProcessDetailsGroup({ messageCount, toolCallCount, durationMs, cacheMis
           <polyline points="4 2.5 7.5 6 4 9.5" />
         </svg>
         <span style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-          {parts.join(" · ")}
+          {segments.map((segment, index) => (
+            <Fragment key={index}>
+              {index > 0 ? " · " : ""}
+              {segment.warning || segment.title
+                ? <span style={segment.warning ? { color: PROCESS_STALL_COLOR } : undefined} title={segment.title}>{segment.text}</span>
+                : segment.text}
+            </Fragment>
+          ))}
           {cacheMissText && <span style={{ color: TRANSCRIPT_NOTICE_WARNING_COLOR }}>{` · ${cacheMissText}`}</span>}
         </span>
       </button>
@@ -271,7 +331,7 @@ export function ChatWindow({ session, searchTarget, onSearchTargetHandled, initi
   const [restoreAnchorReady, setRestoreAnchorReady] = useState(false);
 
   const {
-    loading, error, messages, activeToolResults, entryIds, messageKeys, historyCursor, hasEarlierMessages, earlierTurnCount, streamingStore,
+    loading, error, messages, activeToolResults, entryIds, messageKeys, historyCursor, hasEarlierMessages, earlierTurnCount, streamingStore, turnThroughput,
     agentRunning, bashRunning, pendingBash, modelNames, modelList, modelError, missingCwd, modelScopeWarnings, isModelScopeActive, allModelList, modelThinkingLevels, modelThinkingLevelMaps, toolPreset, thinkingLevel,
     retryInfo, contextUsage, forkingEntryId,
     isCompacting, compactError, compactResult, displayModel: displayModelValue, modelSwitching, sessionStats,
@@ -306,6 +366,9 @@ export function ChatWindow({ session, searchTarget, onSearchTargetHandled, initi
   const hasStreamingContent = useStreamingSelector(streamingStore, selectHasStreamingContent);
   const getStreamingMessage = useCallback(() => streamingStore.getState().streamingMessage, [streamingStore]);
   const sessionBusy = agentRunning || bashRunning;
+  // Tools, a compaction and an extension's question pause the model by design,
+  // so the live row's window is not judged red while they hold the turn.
+  const liveStallGauge = !isCompacting && !extensionDialog && agentPhase?.kind !== "running_tools";
   useEffect(() => {
     onRunStateChange?.(agentRunning);
   }, [agentRunning, onRunStateChange]);
@@ -1149,7 +1212,6 @@ export function ChatWindow({ session, searchTarget, onSearchTargetHandled, initi
                     key={`${keyPrefix}-view-${messageKey}`}
                     message={msg}
                     toolResults={toolResultsMap}
-                    modelNames={modelNames}
                     cwd={messageCwd}
                     onOpenFile={onOpenFile}
                     onOpenSubagent={onOpenSubagent}
@@ -1280,7 +1342,7 @@ export function ChatWindow({ session, searchTarget, onSearchTargetHandled, initi
                           revealed state once it settles, and an unanswered turn
                           must open when it stops running. Manual toggles survive
                           every other re-render. */}
-                      <ProcessDetailsGroup key={answered ? "answered" : liveTurn ? "live" : "unanswered"} messageCount={processMessageCount} toolCallCount={processToolCount} durationMs={turnDurationMs} cacheMisses={processCacheMisses} running={liveTurn} defaultExpanded={!answered && !liveTurn} reveal={revealProcess} t={t}>
+                      <ProcessDetailsGroup key={answered ? "answered" : liveTurn ? "live" : "unanswered"} messageCount={processMessageCount} toolCallCount={processToolCount} durationMs={turnDurationMs} liveStartedAt={liveTurn && hasAnchor ? liveTurnStartedAtMs(messages[userIdx], entryIds[userIdx]) : undefined} throughput={turnThroughput} stallGauge={liveStallGauge} cacheMisses={processCacheMisses} running={liveTurn} defaultExpanded={!answered && !liveTurn} reveal={revealProcess} t={t}>
                         {processViews}
                       </ProcessDetailsGroup>
                     </div>,
@@ -1327,7 +1389,7 @@ export function ChatWindow({ session, searchTarget, onSearchTargetHandled, initi
               );
             })()}
             {isStreaming && hasStreamingContent && (
-              <StreamingReply store={streamingStore} onCommit={updatePromptAnchor} toolResults={toolResultsMap} modelNames={modelNames} cwd={messageCwd} onOpenFile={onOpenFile} onOpenSubagent={onOpenSubagent} />
+              <StreamingReply store={streamingStore} onCommit={updatePromptAnchor} toolResults={toolResultsMap} cwd={messageCwd} onOpenFile={onOpenFile} onOpenSubagent={onOpenSubagent} />
             )}
 
             {(agentRunning || isCompacting) && !hasStreamingContent && (agentPhase || isCompacting) && (
@@ -1517,12 +1579,11 @@ function SideChatDivider() {
   );
 }
 
-const StreamingReply = memo(function StreamingReply({ store, onCommit, toolResults, modelNames, cwd, onOpenFile, onOpenSubagent }: {
+const StreamingReply = memo(function StreamingReply({ store, onCommit, toolResults, cwd, onOpenFile, onOpenSubagent }: {
   store: StreamingStore;
   /** Runs after each chunk is in the DOM. */
   onCommit: () => void;
   toolResults: Map<string, ToolResultMessage>;
-  modelNames: Record<string, string>;
   cwd?: string;
   onOpenFile?: (filePath: string, page?: number) => void;
   onOpenSubagent?: (sessionId: string, label: string) => void;
@@ -1530,7 +1591,7 @@ const StreamingReply = memo(function StreamingReply({ store, onCommit, toolResul
   const message = useStreamingSelector(store, selectStreamingMessage);
   useLayoutEffect(onCommit, [message, onCommit]);
   if (!message) return null;
-  return <MessageView message={message} toolResults={toolResults} isStreaming modelNames={modelNames} cwd={cwd} onOpenFile={onOpenFile} onOpenSubagent={onOpenSubagent} />;
+  return <MessageView message={message} toolResults={toolResults} isStreaming cwd={cwd} onOpenFile={onOpenFile} onOpenSubagent={onOpenSubagent} />;
 });
 
 // A one-line notice is exactly as tall as its entrance animation pins it, and

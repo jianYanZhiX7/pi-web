@@ -22,7 +22,7 @@ export async function checkStreamingMetrics(page) {
   ];
   const markup = states.map(props => renderToStaticMarkup(React.createElement(
     I18nProvider, null,
-    React.createElement(AssistantMessageHeader, { modelName: "Test Model", ...props }),
+    React.createElement(AssistantMessageHeader, props),
   )));
   // Render the production header in the loaded page's CSS, without a live model
   // or timing-dependent stream. Each replacement represents one stream update.
@@ -36,8 +36,8 @@ export async function checkStreamingMetrics(page) {
         const samples = markup.map(html => {
           fixture.innerHTML = html + "<div>Output pane</div>";
           const header = fixture.firstElementChild;
-          const tokens = header.children[1]?.firstElementChild;
-          const rate = header.children[1]?.children[1];
+          const tokens = header.children[0]?.firstElementChild;
+          const rate = header.children[0]?.children[1];
           return {
             height: header.getBoundingClientRect().height,
             contentTop: header.nextElementSibling.getBoundingClientRect().top,

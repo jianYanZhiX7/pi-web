@@ -377,7 +377,7 @@ try {
     await page.screenshot({ path: join(artifacts, `markdown-tables-${viewport.width}.png`) });
     console.log(`PASS: ${viewport.width}px wrapping long table cells and scrolling wide tables`);
     assert.equal(await finalMessage.getByRole("button", { name: /^Thinking/ }).count(), 0);
-    assert.equal(await finalMessage.getByText("test/E2E Model", { exact: true }).count(), 1);
+    assert.equal(await page.getByText("test/E2E Model", { exact: true }).count(), 0, "A message must not name the model");
     assert.equal(thinkingRequests.length, 0);
     await processDetails.click();
     assert.equal(await thinking.count(), 3);

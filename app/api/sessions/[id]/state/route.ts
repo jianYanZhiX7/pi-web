@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { getRpcSession } from "@/lib/rpc-manager";
 import { resolveSessionPath } from "@/lib/session-reader";
 
+// `now` lets the browser put pi's timestamps on its own clock (lib/server-clock.ts),
+// for the live turn's elapsed time: the two clocks can differ (a phone on the LAN).
 export async function GET(
   _req: Request,
   { params }: { params: Promise<{ id: string }> },
@@ -11,13 +13,13 @@ export async function GET(
     const rpc = getRpcSession(id);
     if (rpc?.isAlive()) {
       const state = await rpc.send({ type: "get_state" });
-      return NextResponse.json({ running: true, state });
+      return NextResponse.json({ running: true, state, now: Date.now() });
     }
 
     if (!await resolveSessionPath(id)) {
       return NextResponse.json({ error: "Session not found" }, { status: 404 });
     }
-    return NextResponse.json({ running: false });
+    return NextResponse.json({ running: false, now: Date.now() });
   } catch (error) {
     return NextResponse.json({ error: String(error) }, { status: 500 });
   }

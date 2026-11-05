@@ -135,6 +135,7 @@ test("each event stream connection reads usage, since connecting resumes an idle
       event: { type: "connected", sessionId: sid ?? "pending", isStreaming },
       sessionIdRef: { current: sid }, sdkAgentActiveRef: { current: false }, agentRunningRef: { current: false },
       dispatch() {}, cancelEventStreamGrace() {}, setAgentRunning() {}, setAgentPhase() {},
+      turnThroughput: { reset() {} },
       refreshContextUsage: (id) => reads.push(id),
     });
     assert.deepEqual(reads, sid ? [sid] : []);
