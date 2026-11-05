@@ -157,7 +157,7 @@ const PROCESS_DOT_COORDINATES = [
   [3.1, 4.75],
 ] as const;
 // The live window's shortfall: the model is not putting out tokens.
-const PROCESS_STALL_COLOR = "#ef4444";
+const PROCESS_STALL_COLOR = "var(--danger)";
 
 function ProcessRunningDots() {
   return (
@@ -1453,7 +1453,7 @@ export function ChatWindow({ session, searchTarget, onSearchTargetHandled, initi
             overflowY: "auto",
             padding: quoteInputOpen ? 12 : 3,
             border: "1px solid var(--border)",
-            borderRadius: 6,
+            borderRadius: "var(--radius-sm)",
             background: "var(--bg)",
             boxShadow: "0 2px 10px rgba(0,0,0,0.12)",
           }}
@@ -1477,7 +1477,7 @@ export function ChatWindow({ session, searchTarget, onSearchTargetHandled, initi
                 onAbort={closeQuotedSelection}
                 isStreaming={false}
               />
-              {quoteError && <div role="alert" style={{ color: "#dc2626", fontSize: 12, overflowWrap: "anywhere" }}>{quoteError}</div>}
+              {quoteError && <div role="alert" style={{ color: "var(--danger)", fontSize: 12, overflowWrap: "anywhere" }}>{quoteError}</div>}
             </fieldset>
           ) : <>
           <button
@@ -1621,9 +1621,9 @@ function NoticeShelf({ notices, floating = false, onPauseChange }: { notices: No
     >
       {notices.map((notice, index) => {
         const color = notice.type === "error"
-          ? "#ef4444"
+          ? "var(--danger)"
           : notice.type === "warning"
-            ? "#d97706"
+            ? "var(--warning)"
             : notice.type === "success"
               ? "#10b981"
               : "var(--accent)";
@@ -1654,7 +1654,7 @@ function NoticeShelf({ notices, floating = false, onPauseChange }: { notices: No
               pointerEvents: "auto",
               marginBottom: index === notices.length - 1 ? 0 : 6,
               overflow: "hidden",
-              borderRadius: 14,
+              borderRadius: "var(--radius-xl)",
               border: "1px solid color-mix(in srgb, var(--border) 70%, transparent)",
               background: "var(--bg)",
               color: "var(--text-muted)",
@@ -1869,7 +1869,7 @@ function ExtensionDialog({
             width: "100%",
             padding: "10px 12px",
             border: "1px solid var(--border)",
-            borderRadius: 8,
+            borderRadius: "var(--radius-md)",
             background: "var(--bg)",
             boxShadow: "0 12px 32px rgba(0,0,0,0.18)",
             color: "var(--text)",
@@ -1908,7 +1908,7 @@ function ExtensionDialog({
           display: "flex",
           flexDirection: "column",
           border: "1px solid var(--border)",
-          borderRadius: 8,
+          borderRadius: "var(--radius-md)",
           background: "var(--bg)",
           boxShadow: "0 20px 60px rgba(0,0,0,0.28)",
           overflow: "hidden",
@@ -1935,7 +1935,7 @@ function ExtensionDialog({
               placeItems: "center",
               width: 28,
               height: 28,
-              borderRadius: 6,
+              borderRadius: "var(--radius-sm)",
               border: "1px solid var(--border)",
               background: "var(--bg-panel)",
               color: "var(--text-muted)",
@@ -1956,7 +1956,7 @@ function ExtensionDialog({
               placeItems: "center",
               width: 28,
               height: 28,
-              borderRadius: 6,
+              borderRadius: "var(--radius-sm)",
               border: "1px solid var(--border)",
               background: "var(--bg-panel)",
               color: "var(--text-muted)",
@@ -2013,7 +2013,7 @@ function ExtensionDialog({
                   style={{
                     width: "100%",
                     padding: "9px 10px",
-                    borderRadius: 7,
+                    borderRadius: "var(--radius-md)",
                     border: "1px solid var(--border)",
                     background: "var(--bg-panel)",
                     color: "var(--text)",
@@ -2046,7 +2046,7 @@ function ExtensionDialog({
               style={{
                 width: "100%",
                 padding: "9px 10px",
-                borderRadius: 7,
+                borderRadius: "var(--radius-md)",
                 border: "1px solid var(--border)",
                 background: "var(--bg-panel)",
                 color: "var(--text)",
@@ -2067,7 +2067,7 @@ function ExtensionDialog({
                 width: "100%",
                 minHeight: 220,
                 padding: 10,
-                borderRadius: 7,
+                borderRadius: "var(--radius-md)",
                 border: "1px solid var(--border)",
                 background: "var(--bg-panel)",
                 color: "var(--text)",
@@ -2087,7 +2087,7 @@ function ExtensionDialog({
             onClick={() => onRespond(request, { cancelled: true })}
             style={{
               padding: "6px 10px",
-              borderRadius: 6,
+              borderRadius: "var(--radius-sm)",
               border: "1px solid var(--border)",
               background: "var(--bg)",
               color: "var(--text-muted)",
@@ -2101,7 +2101,7 @@ function ExtensionDialog({
               onClick={submitValue}
               style={{
                 padding: "6px 10px",
-                borderRadius: 6,
+                borderRadius: "var(--radius-sm)",
                 border: "1px solid var(--accent)",
                 background: "var(--accent)",
                 color: "var(--accent-contrast)",
@@ -2115,7 +2115,7 @@ function ExtensionDialog({
               onClick={submitValue}
               style={{
                 padding: "6px 10px",
-                borderRadius: 6,
+                borderRadius: "var(--radius-sm)",
                 border: "1px solid var(--accent)",
                 background: "var(--accent)",
                 color: "var(--accent-contrast)",
@@ -2182,7 +2182,7 @@ function ExtensionCustomPanel({
             width: "100%",
             padding: "10px 12px",
             border: "1px solid var(--border)",
-            borderRadius: 8,
+            borderRadius: "var(--radius-md)",
             background: "var(--bg)",
             boxShadow: "0 12px 32px rgba(0,0,0,0.18)",
             color: "var(--text)",
@@ -2224,7 +2224,7 @@ function ExtensionCustomPanel({
           display: "flex",
           flexDirection: "column",
           border: "1px solid var(--border)",
-          borderRadius: 8,
+          borderRadius: "var(--radius-md)",
           background: "var(--bg)",
           boxShadow: "0 20px 60px rgba(0,0,0,0.28)",
           overflow: "hidden",
@@ -2294,7 +2294,7 @@ function ExtensionCustomPanel({
                 placeItems: "center",
                 width: 28,
                 height: 28,
-                borderRadius: 6,
+                borderRadius: "var(--radius-sm)",
                 border: "1px solid var(--border)",
                 background: "var(--bg-panel)",
                 color: "var(--text-muted)",
@@ -2310,7 +2310,7 @@ function ExtensionCustomPanel({
               onClick={() => onInput(request, "\x03")}
               style={{
                 padding: "5px 9px",
-                borderRadius: 6,
+                borderRadius: "var(--radius-sm)",
                 border: "1px solid var(--border)",
                 background: "var(--bg-panel)",
                 color: "var(--text-muted)",

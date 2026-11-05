@@ -680,8 +680,11 @@ test("without a chat or with a reader that throws, the panel says so and still s
 });
 
 test("the panel keeps to the theme and to Safari 16.2: tokens, the three state colors, no :has or nesting", () => {
-  const colors = new Set((panelSource.match(/#[0-9a-fA-F]{3,8}\b/g) ?? []).map((color) => color.toLowerCase()));
-  assert.deepEqual([...colors].sort(), ["#16a34a", "#d97706", "#ef4444"]);
+  // The three state colors are the theme's status tokens; the panel keeps no
+  // literal colors of its own, so it follows all fourteen themes.
+  const stateColors = new Set([...panelSource.matchAll(/--dbg-(?:ok|warn|err): ([^;]+);/g)].map((match) => match[1]));
+  assert.deepEqual([...stateColors].sort(), ["var(--danger)", "var(--success)", "var(--warning)"]);
+  assert.doesNotMatch(panelSource, /#[0-9a-fA-F]{3,8}\b/, "no literal colors");
   assert.doesNotMatch(panelSource, /AbortSignal\.(any|timeout)|\(\?<[=!]/, "Safari 16.2");
   const css = panelSource.slice(panelSource.indexOf("const DEBUG_PANEL_CSS"));
   assert.doesNotMatch(css, /:has\(|&|transition/);

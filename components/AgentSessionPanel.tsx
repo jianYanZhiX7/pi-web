@@ -134,9 +134,9 @@ function formatRelativeTime(value: string, locale: string): string {
 
 export function statusColor(status: SubagentSessionStatus): string {
   if (status === "running" || status === "starting") return "var(--accent)";
-  if (status === "completed") return "#16a34a";
-  if (status === "failed") return "#dc2626";
-  if (status === "aborted") return "#d97706";
+  if (status === "completed") return "var(--success)";
+  if (status === "failed") return "var(--danger)";
+  if (status === "aborted") return "var(--warning)";
   return "var(--text-dim)";
 }
 
@@ -377,7 +377,7 @@ function RowSideButton({ title, pressed, danger, disabled, onClick, children }: 
   const state = disabled
     ? "cursor-not-allowed text-text-dim opacity-40"
     : danger
-      ? "cursor-pointer text-text-muted hover:bg-[rgba(239,68,68,0.08)] hover:text-[#ef4444] focus-visible:bg-[rgba(239,68,68,0.08)] focus-visible:text-[#ef4444]"
+      ? "cursor-pointer text-text-muted hover:bg-[rgba(239,68,68,0.08)] hover:text-[var(--danger)] focus-visible:bg-[rgba(239,68,68,0.08)] focus-visible:text-[var(--danger)]"
       : pressed
         ? "cursor-pointer text-accent hover:bg-bg-hover"
         : "cursor-pointer text-text-muted hover:bg-bg-hover hover:text-text";
@@ -516,7 +516,7 @@ export function AgentSessionPanel({ rootSession, subagents, selectedSessionId, r
               aria-label={t("agentSwitcher.search")}
               style={{
                 width: "100%", height: 32, padding: "0 10px",
-                border: "1px solid var(--border)", borderRadius: 6,
+                border: "1px solid var(--border)", borderRadius: "var(--radius-sm)",
                 background: "var(--bg)", color: "var(--text)", fontSize: 12, outline: "none",
               }}
             />
@@ -534,7 +534,7 @@ export function AgentSessionPanel({ rootSession, subagents, selectedSessionId, r
             newSideChatPending={newSideChatPending}
           />
           {(newSideChatError || deleteSideChatError) && (
-            <div role="alert" style={{ padding: "6px 12px", borderBottom: "1px solid var(--border)", color: "#dc2626", fontSize: 12, overflowWrap: "anywhere" }}>
+            <div role="alert" style={{ padding: "6px 12px", borderBottom: "1px solid var(--border)", color: "var(--danger)", fontSize: 12, overflowWrap: "anywhere" }}>
               {newSideChatError ?? deleteSideChatError}
             </div>
           )}

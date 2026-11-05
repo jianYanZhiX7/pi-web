@@ -215,7 +215,7 @@ const inputStyle = {
   padding: "6px 9px",
   background: "var(--bg-panel)",
   border: "1px solid var(--border)",
-  borderRadius: 5,
+  borderRadius: "var(--radius-sm)",
   color: "var(--text)",
   fontSize: 12,
   outline: "none",
@@ -308,7 +308,7 @@ function SecretTextInput({
 
 function NumInput({ value, onChange, placeholder, invalid }: { value: string; onChange: (v: string) => void; placeholder?: string; invalid?: boolean }) {
   return <input type="number" value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder}
-    aria-invalid={invalid || undefined} style={invalid ? { ...inputStyle, borderColor: "#ef4444" } : inputStyle} />;
+    aria-invalid={invalid || undefined} style={invalid ? { ...inputStyle, borderColor: "var(--danger)" } : inputStyle} />;
 }
 
 function Select({ value, onChange, options, required }: { value: string; onChange: (v: string) => void; options: readonly string[]; required?: boolean }) {
@@ -445,7 +445,7 @@ function ProviderDetail({ name, editingName, provider, onChange, onEditingNameCh
         <TextInput value={editingName} onChange={onEditingNameChange} placeholder="provider-name" mono />
         {editingName !== name && editingName.trim() && (
           <button onClick={() => onRename(editingName.trim())}
-            style={{ marginTop: 4, padding: "3px 10px", background: "var(--accent)", border: "none", borderRadius: 4, color: "var(--accent-contrast)", cursor: "pointer", fontSize: 11, alignSelf: "flex-start" }}>
+            style={{ marginTop: 4, padding: "3px 10px", background: "var(--accent)", border: "none", borderRadius: "var(--radius-xs)", color: "var(--accent-contrast)", cursor: "pointer", fontSize: 11, alignSelf: "flex-start" }}>
              {t("i18n.rename")}
           </button>
         )}
@@ -478,7 +478,7 @@ function ProviderDetail({ name, editingName, provider, onChange, onEditingNameCh
             onClick={handleDiscoverModels}
             disabled={discoveryState.phase === "loading"}
             style={{
-              alignSelf: "flex-start", height: 30, padding: "0 12px", border: "1px solid var(--border)", borderRadius: 5,
+              alignSelf: "flex-start", height: 30, padding: "0 12px", border: "1px solid var(--border)", borderRadius: "var(--radius-sm)",
               background: "var(--bg-panel)", color: discoveryState.phase === "loading" ? "var(--text-dim)" : "var(--text-muted)",
               cursor: discoveryState.phase === "loading" ? "not-allowed" : "pointer", fontSize: 11,
             }}
@@ -488,7 +488,7 @@ function ProviderDetail({ name, editingName, provider, onChange, onEditingNameCh
         )}
 
         {discoveryState.phase === "error" && (
-          <div style={{ padding: "7px 9px", border: "1px solid rgba(239,68,68,0.3)", borderRadius: 5, color: "#ef4444", fontSize: 11, lineHeight: 1.4 }}>
+          <div style={{ padding: "7px 9px", border: "1px solid rgba(239,68,68,0.3)", borderRadius: "var(--radius-sm)", color: "var(--danger)", fontSize: 11, lineHeight: 1.4 }}>
             {discoveryState.message}
           </div>
         )}
@@ -503,7 +503,7 @@ function ProviderDetail({ name, editingName, provider, onChange, onEditingNameCh
               style={{ ...inputStyle, width: "100%", minWidth: 0 }}
             />
 
-            <div style={{ maxHeight: 220, overflowY: "auto", border: "1px solid var(--border)", borderRadius: 6, background: "var(--bg-panel)" }}>
+            <div style={{ maxHeight: 220, overflowY: "auto", border: "1px solid var(--border)", borderRadius: "var(--radius-sm)", background: "var(--bg-panel)" }}>
               <label
                 style={{
                   minHeight: 32, padding: "5px 9px", display: "flex", alignItems: "center", gap: 8,
@@ -562,7 +562,7 @@ function ProviderDetail({ name, editingName, provider, onChange, onEditingNameCh
               <button
                 onClick={addSelectedModels}
                 disabled={selectedCount === 0}
-                style={{ height: 28, padding: "0 11px", border: "none", borderRadius: 5, background: selectedCount ? "var(--accent)" : "var(--bg-panel)", color: selectedCount ? "var(--accent-contrast)" : "var(--text-dim)", cursor: selectedCount ? "pointer" : "not-allowed", fontSize: 11, fontWeight: 600, whiteSpace: "nowrap" }}
+                style={{ height: 28, padding: "0 11px", border: "none", borderRadius: "var(--radius-sm)", background: selectedCount ? "var(--accent)" : "var(--bg-panel)", color: selectedCount ? "var(--accent-contrast)" : "var(--text-dim)", cursor: selectedCount ? "pointer" : "not-allowed", fontSize: 11, fontWeight: 600, whiteSpace: "nowrap" }}
               >
                 {selectedCount
                   ? t("models.discoveryAddSelectedCount", { count: selectedCount })
@@ -589,7 +589,7 @@ const LEVEL_COLORS: Record<ThinkingLevel, string> = {
   medium:  "#a78bfa",
   high:    "#f472b6",
   xhigh:   "#fb923c",
-  max:     "#ef4444",
+  max:     "var(--danger)",
 };
 
 function ThinkingLevelMapEditor({
@@ -638,7 +638,7 @@ function ThinkingLevelMapEditor({
           fontWeight: 600,
         };
         const btnActiveDisabled: React.CSSProperties = {
-          background: "#ef4444",
+          background: "var(--danger)",
           color: "#fff",
           fontWeight: 600,
         };
@@ -651,7 +651,7 @@ function ThinkingLevelMapEditor({
               alignItems: "center",
               gap: 8,
               padding: "5px 4px",
-              borderRadius: 6,
+              borderRadius: "var(--radius-sm)",
               background: "transparent",
               border: "1px solid transparent",
             }}
@@ -668,7 +668,7 @@ function ThinkingLevelMapEditor({
               </span>
             </div>
 
-            <div style={{ display: "flex", borderRadius: 5, border: "1px solid var(--border)", overflow: "hidden", flexShrink: 0 }}>
+            <div style={{ display: "flex", borderRadius: "var(--radius-sm)", border: "1px solid var(--border)", overflow: "hidden", flexShrink: 0 }}>
               <button
                 onClick={() => setLevel(level, "omit")}
                 style={{ ...btnBase, ...(state === "omit" ? btnActive : {}) }}
@@ -683,7 +683,7 @@ function ThinkingLevelMapEditor({
               </button>
             </div>
 
-            <div style={{ display: "flex", borderRadius: 5, border: `1px solid ${state === "string" ? "var(--accent)" : "var(--border)"}`, overflow: "hidden", transition: "border-color 0.1s" }}>
+            <div style={{ display: "flex", borderRadius: "var(--radius-sm)", border: `1px solid ${state === "string" ? "var(--accent)" : "var(--border)"}`, overflow: "hidden", transition: "border-color 0.1s" }}>
               <button
                 onClick={() => setLevel(level, strVal || level)}
                 style={{ ...btnBase, ...(state === "string" ? btnActive : {}), borderRight: "1px solid var(--border)", flexShrink: 0 }}
@@ -772,8 +772,8 @@ function HeaderListEditor({ headers, onChange }: {
     padding: "6px 9px",
     background: "none",
     border: "1px solid rgba(239,68,68,0.3)",
-    borderRadius: 4,
-    color: "#ef4444",
+    borderRadius: "var(--radius-xs)",
+    color: "var(--danger)",
     cursor: "pointer",
     fontSize: 11,
     lineHeight: 1,
@@ -793,7 +793,7 @@ function HeaderListEditor({ headers, onChange }: {
         ...current,
         { id: nextRowIdRef.current++, name: "", value: "" },
       ])}
-        style={{ padding: "5px 9px", background: "none", border: "1px solid var(--border)", borderRadius: 4, color: "var(--text-muted)", cursor: "pointer", fontSize: 11, display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 5, alignSelf: "flex-start" }}>
+        style={{ padding: "5px 9px", background: "none", border: "1px solid var(--border)", borderRadius: "var(--radius-xs)", color: "var(--text-muted)", cursor: "pointer", fontSize: 11, display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 5, alignSelf: "flex-start" }}>
         + {t("models.addHeader")}
       </button>
     </div>
@@ -1027,9 +1027,9 @@ function ModelDetail({
     ? catalogState.message
     : catalogResultSummary;
   const catalogStatusColor = catalogState.phase === "error"
-    ? "#ef4444"
+    ? "var(--danger)"
     : catalogState.phase === "success" && catalogState.recommendation.price.status === "unreliable"
-      ? "#d97706"
+      ? "var(--warning)"
       : "var(--text-dim)";
   const costFields = [
     { key: "input", label: t("models.costInput") },
@@ -1090,7 +1090,7 @@ function ModelDetail({
                 height: 28,
                 padding: "0 8px",
                 border: `1px solid ${testState.phase === "error" ? "#fecaca" : testState.phase === "success" ? "#bbf7d0" : "var(--border)"}`,
-                borderRadius: 4,
+                borderRadius: "var(--radius-xs)",
                 background: testState.phase === "error" ? "#fee2e2" : testState.phase === "success" ? "#dcfce7" : "#e5e7eb",
                 color: "#111827",
                 fontSize: 11,
@@ -1135,7 +1135,7 @@ function ModelDetail({
             onClick={() => void handleCatalogFill()}
             disabled={!model.id.trim() || catalogState.phase === "loading"}
             style={{
-              height: 28, padding: "0 10px", border: "1px solid var(--border)", borderRadius: 5,
+              height: 28, padding: "0 10px", border: "1px solid var(--border)", borderRadius: "var(--radius-sm)",
               background: "var(--bg-panel)",
               color: !model.id.trim() || catalogState.phase === "loading" ? "var(--text-dim)" : "var(--text-muted)",
               cursor: !model.id.trim() || catalogState.phase === "loading" ? "not-allowed" : "pointer",
@@ -1225,7 +1225,7 @@ function ModelDetail({
                 </Field>
               ))}
               {hasModelCostDraftValue(costDraft) && !parseCompleteModelCost(costDraft) && (
-                <div aria-live="polite" style={{ gridColumn: "1 / -1", color: "#d97706", fontSize: 10 }}>
+                <div aria-live="polite" style={{ gridColumn: "1 / -1", color: "var(--warning)", fontSize: 10 }}>
                   {t("models.costAllRequired")}
                 </div>
               )}
@@ -1510,8 +1510,8 @@ function OAuthDetail({ provider, onRefresh, enabledModels, contextSettings }: {
         </ConfigDetailHeaderInfo>
         <ConfigDetailActions>
           <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-            <span style={{ width: 7, height: 7, borderRadius: "50%", background: provider.loggedIn ? "#4ade80" : "var(--border)", display: "inline-block" }} />
-            <span style={{ fontSize: 11, color: provider.loggedIn ? "#4ade80" : "var(--text-dim)" }}>
+            <span style={{ width: 7, height: 7, borderRadius: "50%", background: provider.loggedIn ? "var(--success)" : "var(--border)", display: "inline-block" }} />
+            <span style={{ fontSize: 11, color: provider.loggedIn ? "var(--success)" : "var(--text-dim)" }}>
                {provider.loggedIn ? t("i18n.connected") : t("i18n.notConnected")}
             </span>
           </div>
@@ -1567,7 +1567,7 @@ function OAuthDetail({ provider, onRefresh, enabledModels, contextSettings }: {
                 <button
                   key={option.id}
                   onClick={() => submitSelection(loginState.token, option.id)}
-                  style={{ padding: "6px 9px", background: "var(--bg)", border: "1px solid var(--border)", borderRadius: 5, color: "var(--text)", cursor: "pointer", fontSize: 12, textAlign: "left" }}
+                  style={{ padding: "6px 9px", background: "var(--bg)", border: "1px solid var(--border)", borderRadius: "var(--radius-sm)", color: "var(--text)", cursor: "pointer", fontSize: 12, textAlign: "left" }}
                 >
                   {option.label}
                 </button>
@@ -1602,7 +1602,7 @@ function OAuthDetail({ provider, onRefresh, enabledModels, contextSettings }: {
             <p style={{ margin: 0, fontSize: 12, color: "var(--text-muted)", lineHeight: 1.5 }}>
               {t("models.oauthDeviceCode")}
             </p>
-            <div style={{ padding: "8px 10px", background: "var(--bg)", border: "1px solid var(--border)", borderRadius: 5, color: "var(--text)", fontSize: 16, fontWeight: 700, fontFamily: "var(--font-mono)", letterSpacing: 0 }}>
+            <div style={{ padding: "8px 10px", background: "var(--bg)", border: "1px solid var(--border)", borderRadius: "var(--radius-sm)", color: "var(--text)", fontSize: 16, fontWeight: 700, fontFamily: "var(--font-mono)", letterSpacing: 0 }}>
               {loginState.userCode}
             </div>
             <p style={{ margin: 0, fontSize: 11, color: "var(--text-dim)", lineHeight: 1.5 }}>
@@ -1617,10 +1617,10 @@ function OAuthDetail({ provider, onRefresh, enabledModels, contextSettings }: {
           <p style={{ margin: 0, fontSize: 12, color: "var(--text-muted)" }}>{loginState.message}</p>
         )}
         {loginState.phase === "success" && (
-             <p style={{ margin: 0, fontSize: 12, color: "#4ade80" }}>{t("i18n.connectedSuccessfully")}</p>
+             <p style={{ margin: 0, fontSize: 12, color: "var(--success)" }}>{t("i18n.connectedSuccessfully")}</p>
         )}
         {loginState.phase === "error" && (
-          <p style={{ margin: 0, fontSize: 12, color: "#f87171" }}>{loginState.message}</p>
+          <p style={{ margin: 0, fontSize: 12, color: "var(--danger)" }}>{loginState.message}</p>
         )}
       </div>
 
@@ -1701,8 +1701,8 @@ function ApiKeyDetail({ provider, onRefresh, enabledModels, contextSettings }: {
         </ConfigDetailHeaderInfo>
         <ConfigDetailActions>
           <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-            <span style={{ width: 7, height: 7, borderRadius: "50%", background: provider.configured ? "#4ade80" : "var(--border)", display: "inline-block" }} />
-            <span style={{ fontSize: 11, color: provider.configured ? "#4ade80" : "var(--text-dim)" }}>
+            <span style={{ width: 7, height: 7, borderRadius: "50%", background: provider.configured ? "var(--success)" : "var(--border)", display: "inline-block" }} />
+            <span style={{ fontSize: 11, color: provider.configured ? "var(--success)" : "var(--text-dim)" }}>
                {provider.configured ? t("i18n.configured") : t("i18n.notConfigured")}
             </span>
           </div>
@@ -1743,8 +1743,8 @@ function ApiKeyDetail({ provider, onRefresh, enabledModels, contextSettings }: {
           disabled={saving || !apiKey.trim() || savedOk}
           style={{
             padding: "6px 12px",
-            background: savedOk ? "#16a34a" : apiKey.trim() ? "var(--accent)" : "var(--bg-panel)",
-            border: "none", borderRadius: 5,
+            background: savedOk ? "var(--success)" : apiKey.trim() ? "var(--accent)" : "var(--bg-panel)",
+            border: "none", borderRadius: "var(--radius-sm)",
             color: savedOk ? "#fff" : apiKey.trim() ? "var(--accent-contrast)" : "var(--text-dim)",
             cursor: (saving || !apiKey.trim() || savedOk) ? "not-allowed" : "pointer",
             fontSize: 12, fontWeight: 600, flexShrink: 0,
@@ -1760,7 +1760,7 @@ function ApiKeyDetail({ provider, onRefresh, enabledModels, contextSettings }: {
         </button>
       </div>
 
-      {error && <p style={{ margin: 0, fontSize: 12, color: "#f87171" }}>{error}</p>}
+      {error && <p style={{ margin: 0, fontSize: 12, color: "var(--danger)" }}>{error}</p>}
 
       <ProviderUsageSummary providerId={provider.id} enabled={provider.configured} />
 
@@ -1803,7 +1803,7 @@ function AddProviderPicker({
     padding: "10px 12px",
     background: "var(--bg-panel)",
     border: "1px solid var(--border)",
-    borderRadius: 7,
+    borderRadius: "var(--radius-md)",
     boxSizing: "border-box",
     cursor: "pointer",
     minWidth: 0,
@@ -1825,7 +1825,7 @@ function AddProviderPicker({
         onClose();
       }}
     >
-      <div style={{ width: 820, maxWidth: "calc(100vw - 32px)", maxHeight: "min(72vh, calc(100vh - 32px))", background: "var(--bg)", border: "1px solid var(--border)", borderRadius: 10, display: "flex", flexDirection: "column", boxShadow: "0 8px 32px rgba(0,0,0,0.22)", overflow: "hidden" }}>
+      <div style={{ width: 820, maxWidth: "calc(100vw - 32px)", maxHeight: "min(72vh, calc(100vh - 32px))", background: "var(--bg)", border: "1px solid var(--border)", borderRadius: "var(--radius-lg)", display: "flex", flexDirection: "column", boxShadow: "0 8px 32px rgba(0,0,0,0.22)", overflow: "hidden" }}>
         {/* Search */}
         <div style={{ padding: "10px 14px", borderBottom: "1px solid var(--border)", flexShrink: 0, display: "flex", alignItems: "center", gap: 8 }}>
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: "var(--text-dim)", flexShrink: 0 }}>
@@ -1860,7 +1860,7 @@ function AddProviderPicker({
                     <div style={{ fontSize: 12, fontWeight: 600, color: "var(--text)", lineHeight: 1.3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>OpenAI / Anthropic compatible</div>
                      <div style={{ fontSize: 10, color: "var(--text-dim)", marginTop: 2 }}>{t("i18n.customEndpoint")}</div>
                   </div>
-                  <span style={{ width: 26, height: 26, borderRadius: 5, background: "var(--bg-hover)", border: "1px dashed var(--border)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <span style={{ width: 26, height: 26, borderRadius: "var(--radius-sm)", background: "var(--bg-hover)", border: "1px dashed var(--border)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: "var(--text-dim)" }}>
                       <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
                     </svg>
@@ -2426,7 +2426,7 @@ export function ModelsConfig({ onClose, embedded = false, cwd = null }: {
                             {modelSidebarLabel(m) || t("i18n.newModel")}
                           </ConfigSidebarText>
                           {m.reasoning && (
-                            <span style={{ fontSize: 9, padding: "1px 4px", background: "rgba(99,102,241,0.12)", color: "rgba(99,102,241,0.8)", borderRadius: 3, flexShrink: 0 }}>T</span>
+                            <span style={{ fontSize: 9, padding: "1px 4px", background: "rgba(99,102,241,0.12)", color: "rgba(99,102,241,0.8)", borderRadius: "var(--radius-xs)", flexShrink: 0 }}>T</span>
                           )}
                         </ConfigSidebarItem>
                       );
@@ -2473,7 +2473,7 @@ export function ModelsConfig({ onClose, embedded = false, cwd = null }: {
 
         {/* Footer */}
         <ConfigFooter status={(loadError || saveError) ? (
-          <span style={{ color: "#f87171" }}>
+          <span style={{ color: "var(--danger)" }}>
             {loadError ? t("models.configUnreadable", { error: loadError }) : saveError}
           </span>
         ) : t("models.applyHelp")}>

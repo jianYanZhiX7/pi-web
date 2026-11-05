@@ -21,10 +21,10 @@
   overscroll-behavior: contain;
   padding: 4px;
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   background: var(--bg);
   color: var(--text);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.10);
+  box-shadow: var(--shadow-lg);
   font-size: 12px;
   animation: sidebar-menu-in 0.12s ease-out;
 }
@@ -53,7 +53,7 @@
   padding: 0 8px;
   box-sizing: border-box;
   border: 0;
-  border-radius: 5px;
+  border-radius: var(--radius-sm);
   background: transparent;
   color: var(--text);
   font: inherit;
@@ -78,7 +78,7 @@
 
 .sidebar-menu-item.is-danger,
 .sidebar-menu-item.is-danger .sidebar-menu-icon {
-  color: #ef4444;
+  color: var(--danger);
 }
 
 .sidebar-menu-item.is-danger:not([aria-disabled="true"]):hover,
@@ -166,7 +166,7 @@
   height: 28px;
   padding: 0;
   border: 0;
-  border-radius: 5px;
+  border-radius: var(--radius-sm);
   background: transparent;
   color: var(--text-dim);
   cursor: pointer;
@@ -185,7 +185,7 @@
 .sidebar-menu-secondary.is-danger:not([aria-disabled="true"]):hover,
 .sidebar-menu-secondary.is-danger:focus-visible {
   background: rgba(239, 68, 68, 0.08);
-  color: #ef4444;
+  color: var(--danger);
 }
 
 .sidebar-menu-secondary[aria-disabled="true"] {
@@ -213,7 +213,7 @@
   padding: 0 8px;
   box-sizing: border-box;
   border: 1px solid var(--border);
-  border-radius: 5px;
+  border-radius: var(--radius-sm);
   outline: none;
   background: var(--bg);
   color: var(--text);
@@ -346,7 +346,7 @@
 .sidebar-menu.is-classic .sidebar-worktree-cancel {
   height: auto;
   padding: 4px 0;
-  border-radius: 5px;
+  border-radius: var(--radius-sm);
   font-size: 11px;
 }
 
@@ -388,7 +388,7 @@
   flex: none;
   height: auto;
   padding: 3px 9px;
-  border-radius: 5px;
+  border-radius: var(--radius-sm);
   font-size: 11px;
 }
 
@@ -425,7 +425,7 @@
 .sidebar-sheet-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.35);
+  background: var(--overlay);
   animation: sidebar-sheet-fade 0.12s ease-out;
   touch-action: none;
   -webkit-tap-highlight-color: transparent;
@@ -440,10 +440,10 @@
   overscroll-behavior: contain;
   padding: 4px 0 max(8px, env(safe-area-inset-bottom));
   border-top: 1px solid var(--border);
-  border-radius: 12px 12px 0 0;
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
   background: var(--bg);
   color: var(--text);
-  box-shadow: 0 -6px 20px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 -6px 20px color-mix(in srgb, var(--text) 14%, transparent);
   font-size: 15px;
   animation: sidebar-sheet-in 0.12s ease-out;
 }
@@ -584,10 +584,10 @@ html[data-keyboard-open] .sidebar-sheet {
   padding: 0 4px 0 12px;
   box-sizing: border-box;
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   background: var(--bg);
   color: var(--text);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--shadow-md);
   font-size: 12px;
   pointer-events: auto;
   animation: sidebar-toast-in 0.16s ease-out;
@@ -634,7 +634,7 @@ html[data-keyboard-open] .sidebar-sheet {
   height: 26px;
   padding: 0 7px;
   border: 0;
-  border-radius: 5px;
+  border-radius: var(--radius-sm);
   background: transparent;
   color: var(--accent);
   font: inherit;
@@ -657,7 +657,7 @@ html[data-keyboard-open] .sidebar-sheet {
   height: 24px;
   padding: 0;
   border: 0;
-  border-radius: 5px;
+  border-radius: var(--radius-sm);
   background: transparent;
   color: var(--text-dim);
   cursor: pointer;
@@ -726,7 +726,7 @@ html[data-keyboard-open] .sidebar-sheet {
   padding: 0 8px;
   box-sizing: border-box;
   border: 1px solid var(--accent);
-  border-radius: 5px;
+  border-radius: var(--radius-sm);
   outline: none;
   background: var(--bg);
   color: var(--text);
@@ -749,7 +749,7 @@ html[data-keyboard-open] .sidebar-sheet {
   flex: 1;
   height: 26px;
   border: 1px solid var(--border);
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   background: var(--bg);
   color: var(--text-muted);
   font: inherit;
@@ -770,9 +770,9 @@ html[data-keyboard-open] .sidebar-sheet {
 
 /* Force-removing a checkout discards its changes. */
 .sidebar-worktree-force {
-  border-color: #ef4444;
-  background: #ef4444;
-  color: #fff;
+  border-color: var(--danger-fill);
+  background: var(--danger-fill);
+  color: var(--danger-contrast);
   font-weight: 600;
 }
 
@@ -799,7 +799,7 @@ html[data-keyboard-open] .sidebar-sheet {
 
 .sidebar-worktree-error {
   margin-top: 6px;
-  color: #ef4444;
+  color: var(--danger);
   font-size: 11px;
   line-height: 1.35;
   overflow-wrap: anywhere;
@@ -848,7 +848,7 @@ html[data-keyboard-open] .sidebar-sheet {
   min-width: 0;
   height: 26px;
   border: 1px solid var(--border);
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   background: var(--bg);
   color: var(--text-muted);
   font: inherit;
@@ -862,9 +862,9 @@ html[data-keyboard-open] .sidebar-sheet {
 
 /* Deleting cannot be undone: the red of a row's delete confirmation. */
 .sidebar-menu-question-confirm {
-  border-color: #ef4444;
-  background: #ef4444;
-  color: #fff;
+  border-color: var(--danger-fill);
+  background: var(--danger-fill);
+  color: var(--danger-contrast);
   font-weight: 600;
 }
 

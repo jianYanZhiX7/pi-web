@@ -310,14 +310,31 @@ Location: `~/.pi/agent/sessions/<encoded-cwd>/<timestamp>_<uuid>.jsonl`
 
 `SessionContext.entryIds[]` parallels `messages[]`: each displayed message's `.jsonl` entry id, used for fork and navigate_tree.
 
-## CSS Variables (`app/globals.css`)
+## Design Tokens (`app/tokens.css`)
+
+Every visual constant lives in `app/tokens.css`, in Tailwind's `theme` layer, in four tiers: primitives (raw ramps, no meaning), palettes (the fourteen themes), derived tokens (computed from the active palette), and geometry (palette-independent). Components must use a semantic token — never a primitive, never a literal.
 
 ```
---bg --bg-panel --bg-hover --bg-selected --border
---text --text-muted --text-dim
---accent --user-bg --tool-bg
---font-mono
+Semantic:   --bg --bg-panel --bg-hover --bg-selected --border --border-strong --border-hairline
+            --text --text-muted --text-dim --accent --accent-hover --accent-contrast
+            --user-bg --assistant-bg --tool-bg --bg-subtle --overlay --focus-ring
+Status:     --success --warning --danger --info
+Fills:      --danger-fill --danger-fill-hover --danger-contrast --success-fill --success-contrast
+Radius:     --radius-xs --radius-sm --radius-md --radius-lg --radius-xl --radius-full
+Elevation:  --shadow-xs --shadow-sm --shadow-md --shadow-lg --shadow-xl --shadow-focus
+Space:      --space-0-5 --space-1 … --space-16 (4px grid)
+Type:       --font-size-2xs … --font-size-2xl --line-height-* --font-weight-*
+Motion:     --duration-fast --duration-normal --duration-slow --ease-standard --ease-out
+Z-order:    --z-base --z-raised --z-sticky --z-popover --z-dialog --z-toast
 ```
+
+Rules:
+
+- A new theme is a palette block only: fourteen `html[data-theme="…"]`-style selectors set the semantic colors and inherit geometry, statuses and derived tokens. `html.dark` is set for every dark theme (`THEME_INIT_SCRIPT`), so scheme-dependent tokens hang off it, not off one theme.
+- Text contrast is chosen per palette, not by eye: `--text` ≥ 7:1, `--text-muted` ≥ 6:1, `--text-dim` ≥ 4.5:1 on `--bg` (the high-contrast pair reaches AAA).
+- Component CSS in `app/*.css` stays unlayered. The layout of 8.7k lines is ordered by document position; moving it into layers without visual-regression coverage would silently change which rule wins. New tokens and any new layered rules go under `@layer theme`.
+- A shadow is tinted with `var(--text)`, never with black: black shadows vanish on dark themes and read as mud on light ones.
+- A status as text and a status as a fill are different tokens. Text and borders take `--danger`/`--success`/`--warning`/`--info`, which flip per scheme to stay readable on the surface; a filled button takes `--danger-fill`/`--success-fill` with `--danger-contrast`/`--success-contrast`, whose pair carries the label's contrast in every scheme (white on `--danger` would be 2.4:1 in a dark theme).
 
 <!-- BEGIN:nextjs-agent-rules -->
 

@@ -1659,7 +1659,7 @@ export function AppShell() {
               style={{
                 flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
                 height: 32, padding: 0, background: "none", border: "none",
-                borderRadius: 9, color: "var(--text-muted)", cursor: disabled ? "default" : "pointer",
+                borderRadius: "var(--radius-md)", color: "var(--text-muted)", cursor: disabled ? "default" : "pointer",
                 fontSize: 12, opacity: disabled ? 0.35 : 1,
                 transition: "background 0.12s, color 0.12s",
               }}
@@ -1682,7 +1682,7 @@ export function AppShell() {
           style={{
             flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
             height: 32, padding: 0, background: "none", border: "none",
-            borderRadius: 9, color: "var(--text-muted)", cursor: "pointer",
+            borderRadius: "var(--radius-md)", color: "var(--text-muted)", cursor: "pointer",
             fontSize: 12, transition: "background 0.12s, color 0.12s",
           }}
           onMouseEnter={(event) => { event.currentTarget.style.background = "var(--bg-hover)"; event.currentTarget.style.color = "var(--text)"; }}
@@ -1712,11 +1712,11 @@ export function AppShell() {
           minHeight: mobileBanner ? 32 : undefined,
           height: mobileBanner ? undefined : "100%",
           padding: mobileBanner ? "6px 12px" : "0 12px",
-          background: mobileBanner ? "color-mix(in srgb, #d97706 8%, var(--bg-panel))" : "none",
+          background: mobileBanner ? "color-mix(in srgb, var(--warning) 8%, var(--bg-panel))" : "none",
           border: "none",
           borderRight: mobileBanner ? "none" : "1px solid var(--border)",
           borderBottom: mobileBanner ? "1px solid var(--border)" : "none",
-          color: "#d97706",
+          color: "var(--warning)",
           cursor: "pointer",
           flexShrink: 0,
           fontSize: 11,
@@ -1753,7 +1753,7 @@ export function AppShell() {
       style={{
         position: "relative",
         minWidth: 15, height: 15, padding: "0 4px", display: "grid", placeItems: "center",
-        borderRadius: 7,
+        borderRadius: "var(--radius-md)",
         background: badge.running ? "color-mix(in srgb, var(--accent) 22%, var(--bg-panel))" : "var(--bg-selected)",
         color: "var(--accent)",
         fontSize: 10, lineHeight: 1, fontVariantNumeric: "tabular-nums",
@@ -1790,14 +1790,13 @@ export function AppShell() {
         position: "relative",
         display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
         width: mobile ? TOP_BAR_ICON_BUTTON_SIZE : undefined,
-        height: "100%", padding: mobile ? 0 : "0 12px",
+        height: "calc(100% - 10px)", borderRadius: "var(--radius-sm)", padding: mobile ? 0 : "0 10px",
         background: activeTopPanel === "agents" ? "var(--bg-selected)" : "none",
         border: "none",
-        borderTop: activeTopPanel === "agents" ? "2px solid var(--accent)" : "2px solid transparent",
-        borderRight: "1px solid var(--border)",
-        color: activeTopPanel === "agents" ? "var(--text)" : activeSessionFamily ? "var(--text-muted)" : "var(--text-dim)",
+        borderTop: "none",
+                color: activeTopPanel === "agents" ? "var(--text)" : activeSessionFamily ? "var(--text-muted)" : "var(--text-dim)",
         cursor: activeSessionFamily ? "pointer" : "not-allowed", opacity: activeSessionFamily ? 1 : 0.45,
-        flexShrink: 0, fontSize: 11, whiteSpace: "nowrap",
+        flexShrink: 0, fontSize: 12, whiteSpace: "nowrap",
         transition: "color 0.1s, background 0.1s",
       }}
       data-mobile-toolbar-action={mobile ? "agents" : undefined}
@@ -1829,13 +1828,11 @@ export function AppShell() {
             justifyContent: "center",
             gap: 6,
             width: mobile ? TOP_BAR_ICON_BUTTON_SIZE : undefined,
-            height: "100%",
+            height: "calc(100% - 10px)",
             padding: mobile ? 0 : "0 12px",
             background: "none",
             border: "none",
-            borderTop: "2px solid transparent",
-            borderRight: "1px solid var(--border)",
-            color: selectedSession ? "var(--text-muted)" : "var(--text-dim)",
+                                    color: selectedSession ? "var(--text-muted)" : "var(--text-dim)",
             cursor: selectedSession ? "pointer" : "not-allowed",
             opacity: selectedSession ? 1 : 0.45,
             flexShrink: 0,
@@ -1912,23 +1909,21 @@ export function AppShell() {
               style={{
                 display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
                 width: mobile ? TOP_BAR_ICON_BUTTON_SIZE : undefined,
-                height: "100%", padding: mobile ? 0 : "0 12px",
+                height: "calc(100% - 10px)", borderRadius: "var(--radius-sm)", padding: mobile ? 0 : "0 10px",
                 background: "none", border: "none",
-                borderTop: "2px solid transparent",
-                borderRight: "1px solid var(--border)",
-                color: isError ? "#dc2626" : isSuccess ? "var(--accent)" : disabled ? "var(--text-dim)" : "var(--text-muted)",
+                                                color: isError ? "var(--danger)" : isSuccess ? "var(--accent)" : disabled ? "var(--text-dim)" : "var(--text-muted)",
                 cursor: disabled ? "not-allowed" : "pointer",
                 opacity: disabled && autoNameStatus.kind !== "naming" ? 0.45 : 1,
-                flexShrink: 0, fontSize: 11, whiteSpace: "nowrap",
+                flexShrink: 0, fontSize: 12, whiteSpace: "nowrap",
                 transition: "color 0.1s, background 0.1s, opacity 0.1s",
               }}
               onMouseEnter={(event) => {
                 if (disabled) return;
-                event.currentTarget.style.color = isError ? "#dc2626" : "var(--text)";
+                event.currentTarget.style.color = isError ? "var(--danger)" : "var(--text)";
                 event.currentTarget.style.background = "var(--bg-hover)";
               }}
               onMouseLeave={(event) => {
-                event.currentTarget.style.color = isError ? "#dc2626" : isSuccess ? "var(--accent)" : disabled ? "var(--text-dim)" : "var(--text-muted)";
+                event.currentTarget.style.color = isError ? "var(--danger)" : isSuccess ? "var(--accent)" : disabled ? "var(--text-dim)" : "var(--text-muted)";
                 event.currentTarget.style.background = "none";
               }}
               data-mobile-toolbar-action={mobile ? "name" : undefined}
@@ -1963,12 +1958,11 @@ export function AppShell() {
             aria-pressed={activeTopPanel === "branches"}
             style={{
               display: "flex", alignItems: "center", justifyContent: "center",
-              width: TOP_BAR_ICON_BUTTON_SIZE, height: "100%", padding: 0,
+              width: TOP_BAR_ICON_BUTTON_SIZE, height: "calc(100% - 10px)", borderRadius: "var(--radius-sm)", padding: 0,
               background: activeTopPanel === "branches" ? "var(--bg-selected)" : "none",
               border: "none",
-              borderTop: activeTopPanel === "branches" ? "2px solid var(--accent)" : "2px solid transparent",
-              borderRight: "1px solid var(--border)",
-              color: activeTopPanel === "branches" ? "var(--text)" : "var(--text-muted)",
+              borderTop: "none",
+                            color: activeTopPanel === "branches" ? "var(--text)" : "var(--text-muted)",
               cursor: "pointer", flexShrink: 0,
             }}
             data-mobile-toolbar-action="branches"
@@ -2004,15 +1998,14 @@ export function AppShell() {
           style={{
             display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
             width: mobile ? TOP_BAR_ICON_BUTTON_SIZE : undefined,
-            height: "100%", padding: mobile ? 0 : "0 12px",
+            height: "calc(100% - 10px)", borderRadius: "var(--radius-sm)", padding: mobile ? 0 : "0 10px",
             background: activeTopPanel === "system" ? "var(--bg-selected)" : "none",
             border: "none",
-            borderTop: activeTopPanel === "system" ? "2px solid var(--accent)" : "2px solid transparent",
-            borderRight: "1px solid var(--border)",
-            cursor: mobile && !showChat ? "not-allowed" : "pointer",
+            borderTop: "none",
+                        cursor: mobile && !showChat ? "not-allowed" : "pointer",
             color: activeTopPanel === "system" ? "var(--text)" : "var(--text-muted)",
             opacity: mobile && !showChat ? 0.45 : 1,
-            fontSize: 11, whiteSpace: "nowrap", transition: "color 0.1s, background 0.1s",
+            fontSize: 12, whiteSpace: "nowrap", transition: "color 0.1s, background 0.1s",
           }}
           onMouseEnter={(event) => {
             if (mobile && !showChat) return;
@@ -2041,15 +2034,14 @@ export function AppShell() {
           style={{
             display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
             width: mobile ? TOP_BAR_ICON_BUTTON_SIZE : undefined,
-            height: "100%", padding: mobile ? 0 : "0 12px",
+            height: "calc(100% - 10px)", borderRadius: "var(--radius-sm)", padding: mobile ? 0 : "0 10px",
             background: activeTopPanel === "tools" ? "var(--bg-selected)" : "none",
             border: "none",
-            borderTop: activeTopPanel === "tools" ? "2px solid var(--accent)" : "2px solid transparent",
-            borderRight: "1px solid var(--border)",
-            cursor: mobile && !showChat ? "not-allowed" : "pointer",
+            borderTop: "none",
+                        cursor: mobile && !showChat ? "not-allowed" : "pointer",
             color: activeTopPanel === "tools" ? "var(--text)" : "var(--text-muted)",
             opacity: mobile && !showChat ? 0.45 : 1,
-            fontSize: 11, whiteSpace: "nowrap", transition: "color 0.1s, background 0.1s",
+            fontSize: 12, whiteSpace: "nowrap", transition: "color 0.1s, background 0.1s",
           }}
           onMouseEnter={(event) => {
             if (mobile && !showChat) return;
@@ -2082,7 +2074,7 @@ export function AppShell() {
     let mobileContextText: string | null = null;
     if (contextUsage?.contextWindow) {
       const percent = contextUsage.percent;
-      if (percent !== null && percent > 90) contextColor = "#ef4444";
+      if (percent !== null && percent > 90) contextColor = "var(--danger)";
       else if (percent !== null && percent > 70) contextColor = "rgba(234,179,8,0.95)";
       desktopContextText = percent !== null
         ? `${percent.toFixed(0)}% / ${formatCompact(contextUsage.contextWindow)}`
@@ -2131,14 +2123,14 @@ export function AppShell() {
           gap: mobile ? 7 : 10,
           paddingLeft: mobile ? 6 : 12,
           paddingRight: mobile ? 6 : 12,
-          height: "100%",
+          height: "calc(100% - 10px)",
+          borderRadius: "var(--radius-sm)",
           overflow: "hidden",
           visibility: covered ? "hidden" : "visible",
           pointerEvents: covered ? "none" : "auto",
           background: activeTopPanel === "session" ? "var(--bg-selected)" : "none",
           border: "none",
-          borderTop: activeTopPanel === "session" ? "2px solid var(--accent)" : "2px solid transparent",
-          fontSize: 11, color: "var(--text-muted)",
+          fontSize: 12, color: "var(--text-muted)",
           whiteSpace: "nowrap", cursor: showChat ? "pointer" : "default",
           fontVariantNumeric: "tabular-nums",
           transition: "color 0.1s, background 0.1s",
@@ -2245,11 +2237,9 @@ export function AppShell() {
         style={{
           marginLeft: mobile ? 0 : "auto",
           display: "flex", alignItems: "center", justifyContent: "center",
-          width: TOP_BAR_ICON_BUTTON_SIZE, height: "100%", padding: 0,
+          width: TOP_BAR_ICON_BUTTON_SIZE, height: "calc(100% - 10px)", borderRadius: "var(--radius-sm)", padding: 0,
           background: open ? "var(--bg-selected)" : "none",
           border: "none",
-          borderTop: open ? "2px solid var(--accent)" : "2px solid transparent",
-          ...(mobile ? { borderRight: "1px solid var(--border)" } : { borderLeft: "1px solid var(--border)" }),
           color: open ? "var(--text)" : "var(--text-muted)",
           cursor: "pointer", flexShrink: 0, transition: "color 0.1s, background 0.1s",
         }}
@@ -2425,8 +2415,7 @@ export function AppShell() {
         style={{
           "--sidebar-width": `${sidebarResizer.width}px`,
           background: "var(--bg-panel)",
-          borderRight: "1px solid var(--border)",
-          display: "flex",
+                    display: "flex",
           flexDirection: "column",
           flexShrink: 0,
           paddingTop: "env(safe-area-inset-top)",
@@ -2450,8 +2439,8 @@ export function AppShell() {
       {/* Center: chat */}
       <div inert={rightPanelFullWidth} style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", minWidth: 0 }}>
         {/* Top bar with sidebar toggle */}
-        <div ref={topBarRef} style={{ flexShrink: 0, background: "var(--bg-panel)" }}>
-        <div style={{ display: "flex", alignItems: "center", position: "relative", borderBottom: "1px solid var(--border)", height: "calc(var(--top-bar-height) + env(safe-area-inset-top))", paddingTop: "env(safe-area-inset-top)" }}>
+        <div ref={topBarRef} style={{ flexShrink: 0, background: "var(--bg)" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 2, padding: "0 6px", position: "relative", borderBottom: "1px solid var(--border)", height: "calc(var(--top-bar-height) + env(safe-area-inset-top))", paddingTop: "env(safe-area-inset-top)" }}>
           <button
             onClick={handleSidebarToggle}
              title={sidebarOpen ? translate("sidebar.hide") : translate("sidebar.show")}
@@ -2459,8 +2448,7 @@ export function AppShell() {
             style={{
               display: "flex", alignItems: "center", justifyContent: "center",
               width: TOP_BAR_ICON_BUTTON_SIZE, height: TOP_BAR_ICON_BUTTON_SIZE, padding: 0,
-              background: "none", border: "none", borderRight: "1px solid var(--border)",
-              color: "var(--text-muted)", cursor: "pointer", flexShrink: 0, transition: "color 0.12s",
+              background: "none", border: "none",               color: "var(--text-muted)", cursor: "pointer", flexShrink: 0, transition: "color 0.12s",
             }}
             onMouseEnter={(e) => { e.currentTarget.style.color = "var(--text)"; }}
             onMouseLeave={(e) => { e.currentTarget.style.color = "var(--text-muted)"; }}
@@ -2504,8 +2492,7 @@ export function AppShell() {
                     display: "flex", alignItems: "center", justifyContent: "center",
                     width: TOP_BAR_ICON_BUTTON_SIZE, height: TOP_BAR_ICON_BUTTON_SIZE, padding: 0,
                     background: mobileToolbarMoreOpen ? "var(--bg-selected)" : "none",
-                    border: "none", borderRight: "1px solid var(--border)",
-                    color: mobileToolbarMoreOpen ? "var(--text)" : "var(--text-muted)",
+                    border: "none",                     color: mobileToolbarMoreOpen ? "var(--text)" : "var(--text-muted)",
                     cursor: "pointer", flexShrink: 0, transition: "color 0.12s, background 0.12s",
                   }}
                 >
@@ -2716,7 +2703,7 @@ export function AppShell() {
                             color: copied ? "var(--accent)" : "var(--text-dim)",
                             background: "transparent",
                             border: "1px solid var(--border)",
-                            borderRadius: 4,
+                            borderRadius: "var(--radius-xs)",
                             cursor: "pointer",
                             flex: "0 0 auto",
                             transition: "color 0.12s, border-color 0.12s, background 0.12s",
@@ -2888,7 +2875,7 @@ export function AppShell() {
               role="alert"
               style={{ height: "100%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 8, padding: 24, color: "var(--text-muted)", textAlign: "center" }}
             >
-               <div style={{ fontSize: 14, color: "#dc2626" }}>{translate("workspace.unable")}</div>
+               <div style={{ fontSize: 14, color: "var(--danger)" }}>{translate("workspace.unable")}</div>
               <div style={{ maxWidth: "min(720px, 100%)", overflowWrap: "anywhere", fontFamily: "var(--font-mono)", fontSize: 12 }}>
                 {initialNavigation.requestedCwd}
               </div>

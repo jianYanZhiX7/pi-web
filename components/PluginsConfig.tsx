@@ -153,7 +153,7 @@ function statusColor(status: PluginPackageInfo["status"]): string {
   if (status === "loaded") return "var(--accent)";
   if (status === "installed") return "#f59e0b";
   if (status === "disabled") return "var(--text-dim)";
-  return "#ef4444";
+  return "var(--danger)";
 }
 
 function ResourceList({ pkg }: { pkg: PluginPackageInfo }) {
@@ -370,7 +370,7 @@ function PackageDetail({
                 style={{
                   fontSize: 10,
                   padding: "1px 5px",
-                  borderRadius: 3,
+                  borderRadius: "var(--radius-xs)",
                   background: "rgba(120,120,120,0.12)",
                   color: "var(--text-dim)",
                 }}
@@ -382,9 +382,9 @@ function PackageDetail({
                 style={{
                   fontSize: 10,
                   padding: "1px 5px",
-                  borderRadius: 3,
+                  borderRadius: "var(--radius-xs)",
                   background: "rgba(245,158,11,0.12)",
-                  color: "#d97706",
+                  color: "var(--warning)",
                 }}
               >
                 {t("i18n.filtered")}
@@ -499,7 +499,7 @@ function PackageDetail({
             )}
           </div>
           {updateError && (
-            <span style={{ fontSize: 12, color: "#ef4444" }}>{updateError}</span>
+            <span style={{ fontSize: 12, color: "var(--danger)" }}>{updateError}</span>
           )}
         </ConfigDetailGridRow>
         <ConfigDetailGridRow label={t("i18n.package")} mono>
@@ -522,12 +522,12 @@ function PackageDetail({
       </div>
 
       {actionMessage && (
-        <div style={{ fontSize: 12, color: "#16a34a" }}>
+        <div style={{ fontSize: 12, color: "var(--success)" }}>
           {actionMessage}
         </div>
       )}
       {actionError && (
-        <div style={{ fontSize: 12, color: "#ef4444", whiteSpace: "pre-wrap" }}>
+        <div style={{ fontSize: 12, color: "var(--danger)", whiteSpace: "pre-wrap" }}>
           {actionError}
         </div>
       )}

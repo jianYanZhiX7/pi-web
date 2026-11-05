@@ -111,7 +111,7 @@ export function SelectorRow({
             display: "flex", alignItems: "center", justifyContent: "center",
             width: 24, height: 24, padding: 0,
             background: "var(--bg-hover)", border: "1px solid var(--border)",
-            borderRadius: 6, color: "var(--text-muted)",
+            borderRadius: "var(--radius-sm)", color: "var(--text-muted)",
             cursor: "pointer",
             opacity: showSave ? 1 : 0,
             pointerEvents: showSave ? "auto" : "none",

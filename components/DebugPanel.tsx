@@ -1473,9 +1473,9 @@ function SessionRowCells({ summary, mine, remaining, idleTimeoutMs, t, badges, i
 // jump once a second. Narrow rules follow the panel's own width, not the window's.
 const DEBUG_PANEL_CSS = `
   .debug-panel {
-    --dbg-ok: #16a34a;
-    --dbg-warn: #d97706;
-    --dbg-err: #ef4444;
+    --dbg-ok: var(--success);
+    --dbg-warn: var(--warning);
+    --dbg-err: var(--danger);
     container-type: inline-size;
     container-name: debug-panel;
     display: flex;

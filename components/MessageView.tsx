@@ -128,7 +128,7 @@ function SafeMarkdownBody({ children, className, ...props }: React.ComponentProp
           margin: "4px 0",
           padding: "7px 10px",
           border: "1px solid var(--border)",
-          borderRadius: 6,
+          borderRadius: "var(--radius-sm)",
           background: "var(--bg-panel)",
           color: "var(--text-muted)",
           cursor: "pointer",
@@ -379,7 +379,7 @@ function UserMessageView({ message, cwd, onOpenFile, entryId, onFork, forking, o
             <img
               src={src}
               alt=""
-              style={{ maxWidth: 240, maxHeight: 240, borderRadius: 6, objectFit: "contain", display: "block", border: "1px solid rgba(59,130,246,0.15)" }}
+              style={{ maxWidth: 240, maxHeight: 240, borderRadius: "var(--radius-sm)", objectFit: "contain", display: "block", border: "1px solid color-mix(in srgb, var(--accent) 16%, transparent)" }}
             />
           </ImagePreview>
         );
@@ -409,9 +409,9 @@ function UserMessageView({ message, cwd, onOpenFile, entryId, onFork, forking, o
             flex: 1,
             minWidth: 0,
             background: isEditing ? "color-mix(in srgb, var(--accent) 14%, var(--user-bg))" : "var(--user-bg)",
-            border: isEditing ? "1px solid color-mix(in srgb, var(--accent) 62%, var(--user-bg))" : "1px solid rgba(59,130,246,0.2)",
+            border: isEditing ? "1px solid color-mix(in srgb, var(--accent) 62%, var(--user-bg))" : "1px solid color-mix(in srgb, var(--accent) 22%, transparent)",
             boxShadow: isEditing ? "0 0 0 2px color-mix(in srgb, var(--accent) 16%, transparent)" : undefined,
-            borderRadius: 12,
+            borderRadius: "var(--radius-lg)",
             padding: "8px 12px",
             fontSize: "calc(14px + var(--chat-font-size-offset, 0px))",
             lineHeight: 1.6,
@@ -509,7 +509,7 @@ function UserMessageView({ message, cwd, onOpenFile, entryId, onFork, forking, o
                 display: "flex", alignItems: "center", gap: 4,
                 padding: "3px 8px", height: 22,
                 background: "none", border: "none",
-                borderRadius: 5,
+                borderRadius: "var(--radius-sm)",
                 color: copied ? "var(--accent)" : "var(--text-dim)",
                 cursor: "pointer",
                 fontSize: 11, fontWeight: 400,
@@ -547,7 +547,7 @@ function UserMessageView({ message, cwd, onOpenFile, entryId, onFork, forking, o
                     display: "flex", alignItems: "center", gap: 4,
                     padding: "3px 8px", height: 22,
                     background: "none", border: "none",
-                    borderRadius: 5,
+                    borderRadius: "var(--radius-sm)",
                     color: "var(--text-dim)",
                     cursor: "pointer",
                     fontSize: 11, fontWeight: 400,
@@ -574,7 +574,7 @@ function UserMessageView({ message, cwd, onOpenFile, entryId, onFork, forking, o
                     display: "flex", alignItems: "center", gap: 4,
                     padding: "3px 8px", height: 22,
                     background: "none", border: "none",
-                    borderRadius: 5,
+                    borderRadius: "var(--radius-sm)",
                     color: "var(--accent)",
                     cursor: "pointer",
                     fontSize: 11, fontWeight: 500,
@@ -596,7 +596,7 @@ function UserMessageView({ message, cwd, onOpenFile, entryId, onFork, forking, o
                     display: "flex", alignItems: "center", gap: 4,
                     padding: "3px 8px", height: 22,
                     background: "none", border: "none",
-                    borderRadius: 5,
+                    borderRadius: "var(--radius-sm)",
                     color: forking ? "var(--accent)" : "var(--text-dim)",
                     cursor: forking ? "not-allowed" : "pointer",
                     fontSize: 11, fontWeight: 400,
@@ -642,7 +642,7 @@ export function AssistantMessageHeader({ estimatedTokens = 0, tps = null }: {
             <span style={{ minWidth: "calc(6ch + 1px)" }}>{estimatedTokens}</span>
           </span>
           {tps !== null && (
-            <span style={{ marginLeft: 6, padding: "1px 6px", minWidth: "calc(9ch + 1px)", boxSizing: "content-box", textAlign: "center", borderRadius: 4, background: bg, color: "#fff", fontSize: 11, fontWeight: 400 }}>
+            <span style={{ marginLeft: 6, padding: "1px 6px", minWidth: "calc(9ch + 1px)", boxSizing: "content-box", textAlign: "center", borderRadius: "var(--radius-xs)", background: bg, color: "#fff", fontSize: 11, fontWeight: 400 }}>
               {tps.toFixed(1)} t/s
             </span>
           )}
@@ -858,9 +858,9 @@ function AssistantMessageView({
             marginTop: blocks.length > 0 ? 8 : 0,
             padding: "7px 10px",
             border: "1px solid rgba(239,68,68,0.3)",
-            borderRadius: 6,
+            borderRadius: "var(--radius-sm)",
             background: "rgba(239,68,68,0.07)",
-            color: "#ef4444",
+            color: "var(--danger)",
             fontFamily: "var(--font-mono)",
             fontSize: 12,
             lineHeight: 1.5,
@@ -879,7 +879,7 @@ function AssistantMessageView({
             marginTop: blocks.length > 0 || providerError ? 8 : 0,
             padding: "7px 10px",
             border: "1px solid rgba(234,179,8,0.3)",
-            borderRadius: 6,
+            borderRadius: "var(--radius-sm)",
             background: "rgba(234,179,8,0.07)",
             color: "#ca8a04",
             fontFamily: "var(--font-mono)",
@@ -900,7 +900,7 @@ function AssistantMessageView({
                 marginTop: 8,
                 padding: "3px 8px",
                 border: "1px solid currentColor",
-                borderRadius: 5,
+                borderRadius: "var(--radius-sm)",
                 background: "transparent",
                 color: "inherit",
                 cursor: isCompacting ? "default" : "pointer",
@@ -911,7 +911,7 @@ function AssistantMessageView({
             </button>
           )}
           {unansweredTruncation && compactError && (
-            <div style={{ marginTop: 8, color: "#ef4444", whiteSpace: "pre-wrap" }}>{compactError}</div>
+            <div style={{ marginTop: 8, color: "var(--danger)", whiteSpace: "pre-wrap" }}>{compactError}</div>
           )}
         </div>
       )}
@@ -940,7 +940,7 @@ function AssistantMessageView({
               display: "flex", alignItems: "center", gap: 4,
               padding: "3px 8px", height: 22,
               background: "none", border: "none",
-              borderRadius: 5,
+              borderRadius: "var(--radius-sm)",
               color: copied ? "var(--accent)" : "var(--text-dim)",
               cursor: "pointer",
               fontSize: 11, fontWeight: 400,
@@ -1074,7 +1074,7 @@ export function ThinkingBlock({ block, duration, sessionId, entryId, blockIndex 
     <div style={{
       display: "flex", alignItems: "flex-start", gap: 6, minWidth: 0,
       border: "1px solid var(--border)",
-      borderRadius: 7,
+      borderRadius: "var(--radius-md)",
       padding: "6px 10px",
       background: "var(--bg)",
       fontFamily: "var(--font-mono)",
@@ -1116,7 +1116,7 @@ export function ThinkingBlock({ block, duration, sessionId, entryId, blockIndex 
           style={{
             flex: 1,
             minWidth: 0,
-            color: error ? "#f87171" : "var(--text-muted)",
+            color: error ? "var(--danger)" : "var(--text-muted)",
             whiteSpace: "pre-wrap",
             overflowWrap: "anywhere",
           }}
@@ -1212,11 +1212,11 @@ function ToolCallBlock({ block, result, duration, onOpenSubagent }: { block: Too
   return (
     <div
       style={{
-        borderRadius: 7,
+        borderRadius: "var(--radius-md)",
         overflow: "hidden",
         fontSize: 12,
-        border: isError ? "1px solid rgba(248,113,113,0.45)" : "1px solid rgba(34,197,94,0.25)",
-        background: isError ? "rgba(248,113,113,0.05)" : "rgba(34,197,94,0.04)",
+        border: `1px solid ${isError ? "color-mix(in srgb, var(--danger) 45%, var(--border))" : "var(--border)"}`,
+        background: isError ? "color-mix(in srgb, var(--danger) 5%, var(--bg))" : "var(--tool-bg)",
       }}
     >
       {/* ── Tool call header ── */}
@@ -1240,7 +1240,7 @@ function ToolCallBlock({ block, result, duration, onOpenSubagent }: { block: Too
         >
           <span
             title={mcpLabel ? block.toolName : undefined}
-            style={{ color: isError ? "#f87171" : "#16a34a", fontFamily: "var(--font-mono)", fontWeight: 600, fontSize: 11, flexShrink: 0 }}
+            style={{ color: isError ? "var(--danger)" : "var(--text-muted)", fontFamily: "var(--font-mono)", fontWeight: 600, fontSize: "var(--font-size-xs)", flexShrink: 0 }}
           >
             {mcpLabel ? (
               <>
@@ -1286,7 +1286,7 @@ function ToolCallBlock({ block, result, duration, onOpenSubagent }: { block: Too
             style={{
               padding: "6px 10px 8px",
               background: "var(--bg-subtle)",
-              borderTop: isError ? "1px solid rgba(248,113,113,0.25)" : "1px solid rgba(34,197,94,0.2)",
+              borderTop: `1px solid ${isError ? "color-mix(in srgb, var(--danger) 30%, var(--border))" : "var(--border-hairline)"}`,
             }}
           >
             <ToolFieldRows fields={toolFields} />
@@ -1301,7 +1301,7 @@ function ToolCallBlock({ block, result, duration, onOpenSubagent }: { block: Too
               lineHeight: 1.5,
               overflow: "auto",
               background: "var(--bg-subtle)",
-              borderTop: isError ? "1px solid rgba(248,113,113,0.25)" : "1px solid rgba(34,197,94,0.2)",
+              borderTop: `1px solid ${isError ? "color-mix(in srgb, var(--danger) 30%, var(--border))" : "var(--border-hairline)"}`,
               whiteSpace: "pre-wrap",
               wordBreak: "break-all",
             }}
@@ -1321,7 +1321,7 @@ function ToolCallBlock({ block, result, duration, onOpenSubagent }: { block: Too
 
       {/* ── Expanded: applied-patch split diff ── */}
       {expanded && patchFiles && (
-        <div style={{ borderTop: "1px solid rgba(34,197,94,0.15)", background: "var(--bg)" }}>
+        <div style={{ borderTop: "1px solid var(--border-hairline)", background: "var(--bg)" }}>
           <SplitFilesView files={patchFiles} />
         </div>
       )}
@@ -1361,7 +1361,7 @@ function PairedDiffResult({ diff }: {
   return (
     <div
       style={{
-        borderTop: "1px solid rgba(34,197,94,0.15)",
+        borderTop: "1px solid var(--border-hairline)",
         background: "var(--bg)",
       }}
     >
@@ -1537,7 +1537,7 @@ function SplitDiffHeader({ title, side }: { title: string; side: "left" | "right
 function SplitDiffCellView({ cell, side }: { cell: SplitDiffCell; side: "left" | "right" }) {
   const bg =
     cell.type === "added"
-      ? "rgba(34,197,94,0.12)"
+      ? "color-mix(in srgb, var(--success) 12%, transparent)"
       : cell.type === "removed"
       ? "rgba(248,113,113,0.13)"
       : cell.type === "empty"
@@ -1546,7 +1546,7 @@ function SplitDiffCellView({ cell, side }: { cell: SplitDiffCell; side: "left" |
   const marker =
     cell.type === "added" ? "+" : cell.type === "removed" ? "-" : " ";
   const markerColor =
-    cell.type === "added" ? "#22c55e" : cell.type === "removed" ? "#f87171" : "var(--text-dim)";
+    cell.type === "added" ? "var(--success)" : cell.type === "removed" ? "var(--danger)" : "var(--text-dim)";
 
   return (
     <div
@@ -1611,13 +1611,13 @@ function PatchTextView({ text }: { text: string }) {
           line.startsWith("-") && !line.startsWith("---") ? "removed" :
           "context";
         const bg =
-          kind === "added" ? "rgba(34,197,94,0.12)" :
+          kind === "added" ? "color-mix(in srgb, var(--success) 12%, transparent)" :
           kind === "removed" ? "rgba(248,113,113,0.13)" :
           kind === "hunk" ? "rgba(96,165,250,0.12)" :
           "transparent";
         const color =
-          kind === "added" ? "#22c55e" :
-          kind === "removed" ? "#f87171" :
+          kind === "added" ? "var(--success)" :
+          kind === "removed" ? "var(--danger)" :
           kind === "hunk" ? "var(--accent)" :
           "var(--text)";
 
@@ -1628,9 +1628,9 @@ function PatchTextView({ text }: { text: string }) {
               display: "flex",
               background: bg,
               borderLeft: kind === "added"
-                ? "3px solid #22c55e"
+                ? "3px solid var(--success)"
                 : kind === "removed"
-                ? "3px solid #f87171"
+                ? "3px solid var(--danger)"
                 : kind === "hunk"
                 ? "3px solid var(--accent)"
                 : "3px solid transparent",
@@ -1724,7 +1724,7 @@ function ResultImages({ images, isError }: { images: ImageContent[]; isError: bo
         flexWrap: "wrap",
         padding: "10px",
         background: "var(--bg)",
-        borderTop: `1px solid ${isError ? "rgba(248,113,113,0.3)" : "rgba(34,197,94,0.15)"}`,
+        borderTop: `1px solid ${isError ? "color-mix(in srgb, var(--danger) 30%, var(--border))" : "var(--border-hairline)"}`,
       }}
     >
       {images.map((image, index) => {
@@ -1745,7 +1745,7 @@ function ResultImages({ images, isError }: { images: ImageContent[]; isError: bo
                 display: "block",
                 maxWidth: "min(100%, 720px)",
                 maxHeight: 520,
-                borderRadius: 6,
+                borderRadius: "var(--radius-sm)",
                 objectFit: "contain",
                 border: "1px solid var(--border)",
               }}
@@ -1766,7 +1766,7 @@ function PairedResult({ text, isEmpty, isError }: {
   return (
     <div
       style={{
-        borderTop: `1px solid ${isError ? "rgba(248,113,113,0.3)" : "rgba(34,197,94,0.15)"}`,
+        borderTop: `1px solid ${isError ? "color-mix(in srgb, var(--danger) 30%, var(--border))" : "var(--border-hairline)"}`,
         background: isError ? "rgba(248,113,113,0.04)" : "var(--bg-subtle)",
       }}
     >
@@ -1774,7 +1774,7 @@ function PairedResult({ text, isEmpty, isError }: {
         style={{
           margin: 0,
           padding: "8px 10px",
-          color: isError ? "#f87171" : (isEmpty ? "var(--text-dim)" : "var(--text-muted)"),
+          color: isError ? "var(--danger)" : (isEmpty ? "var(--text-dim)" : "var(--text-muted)"),
           fontSize: "calc(12px + var(--chat-font-size-offset, 0px))",
           lineHeight: 1.5,
           overflow: "auto",
@@ -1807,7 +1807,7 @@ function CompactionMessageView({ message }: { message: CustomMessage }) {
       <div
         style={{
           border: "1px solid var(--border)",
-          borderRadius: 8,
+          borderRadius: "var(--radius-md)",
           overflow: "hidden",
           background: "var(--bg)",
         }}
@@ -1950,7 +1950,7 @@ function CustomMessageView({ message, cwd, onOpenFile }: { message: CustomMessag
       <div
         style={{
           border: "1px solid var(--border)",
-          borderRadius: 8,
+          borderRadius: "var(--radius-md)",
           overflow: "hidden",
           background: "var(--bg)",
         }}
@@ -2016,7 +2016,7 @@ function CustomMessageView({ message, cwd, onOpenFile }: { message: CustomMessag
                         <img
                           src={src}
                           alt=""
-                          style={{ maxWidth: 240, maxHeight: 240, borderRadius: 6, objectFit: "contain", display: "block", border: "1px solid var(--border)" }}
+                          style={{ maxWidth: 240, maxHeight: 240, borderRadius: "var(--radius-sm)", objectFit: "contain", display: "block", border: "1px solid var(--border)" }}
                         />
                       </ImagePreview>
                     );
@@ -2167,7 +2167,7 @@ const TOOL_FIELD_BLOCK: CSSProperties = {
   maxHeight: 260,
   overflow: "auto",
   border: "1px solid var(--border)",
-  borderRadius: 6,
+  borderRadius: "var(--radius-sm)",
   background: "var(--bg)",
   font: "inherit",
   lineHeight: 1.5,

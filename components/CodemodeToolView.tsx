@@ -18,9 +18,9 @@ import {
 export const CODEMODE_VISIBLE_CALLS = 20;
 
 const STATUS_STYLE: Record<CodemodeCallStatus, { icon: string; color: string }> = {
-  running: { icon: "…", color: "#d97706" },
-  ok: { icon: "✓", color: "#16a34a" },
-  error: { icon: "✗", color: "#f87171" },
+  running: { icon: "…", color: "var(--warning)" },
+  ok: { icon: "✓", color: "var(--success)" },
+  error: { icon: "✗", color: "var(--danger)" },
   cancelled: { icon: "⊘", color: "var(--text-dim)" },
 };
 
@@ -53,7 +53,7 @@ function CallRow({ call }: { call: CodemodeCallView }) {
         )}
       </div>
       {call.error && (
-        <div style={{ color: "#f87171", paddingLeft: 18, whiteSpace: "pre-wrap", overflowWrap: "anywhere" }}>{call.error}</div>
+        <div style={{ color: "var(--danger)", paddingLeft: 18, whiteSpace: "pre-wrap", overflowWrap: "anywhere" }}>{call.error}</div>
       )}
     </li>
   );
@@ -75,7 +75,7 @@ export function CodemodeCallList({ calls, omitted, isError }: {
   return (
     <div
       style={{
-        borderTop: isError ? "1px solid rgba(248,113,113,0.25)" : "1px solid rgba(34,197,94,0.2)",
+        borderTop: `1px solid ${isError ? "color-mix(in srgb, var(--danger) 30%, var(--border))" : "var(--border-hairline)"}`,
         background: "var(--bg-subtle)",
         padding: "6px 10px",
         fontFamily: "var(--font-mono)",

@@ -11,7 +11,7 @@ import {
 } from "@/lib/transcript-notices";
 
 // pi's TUI draws these lines in its warning color, cache warming dim (#1265).
-export const TRANSCRIPT_NOTICE_WARNING_COLOR = "#d97706";
+export const TRANSCRIPT_NOTICE_WARNING_COLOR = "var(--warning)";
 
 type Translate = (key: string, params?: Record<string, string | number>) => string;
 

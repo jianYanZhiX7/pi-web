@@ -76,7 +76,7 @@ test("the running fold ticks its elapsed time and last window's tokens, red unde
   assert.match(source, /running && liveStartedAt !== undefined/);
   assert.match(source, /throughput\.tokensInWindow\(now\)/);
   assert.match(source, /warning: stallGauge && isThroughputStalled\(throughput, now\)/);
-  assert.match(source, /const PROCESS_STALL_COLOR = "#ef4444";/);
+  assert.match(source, /const PROCESS_STALL_COLOR = "var\(--danger\)";/);
   // The live numbers join the accessible name of the button like the rest of the line.
   assert.match(source, /const parts = segments\.map\(\(segment\) => segment\.text\);/);
   assert.match(source, /\.\.\.parts, \.\.\.\(cacheMissText/);
