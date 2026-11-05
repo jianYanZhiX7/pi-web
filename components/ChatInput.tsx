@@ -2387,7 +2387,7 @@ export const ChatInput = memo(forwardRef<ChatInputHandle, Props>(function ChatIn
               fontSize: "var(--chat-content-font-size, 14px)",
               lineHeight: 1.6,
               fontFamily: "inherit",
-              minHeight: compact ? 96 : 24,
+              minHeight: compact ? 96 : 80,
               maxHeight: 200,
               overflow: "auto",
             }}
