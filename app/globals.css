@@ -1281,15 +1281,16 @@ pre, code {
   margin-top: 3px;
 }
 
-/* A fence is nothing but its text: no frame, no fill, no gutter. The header row
-   above it holds the copy mark alone, so the block reads as a passage in code
-   type rather than a card dropped into the reply. */
+/* A fence is a framed card: a hairline border around the header's faint band
+   and the code below it, so a block reads as its own surface in the reply. */
 .markdown-code-block {
   position: relative;
   width: 100%;
   min-width: 0;
   max-width: 100%;
   margin: 6px 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
   overflow: hidden;
 }
 /* Code fences wrap long lines, as pi's TUI does: a line is a row of its number
@@ -1311,10 +1312,12 @@ pre, code {
 .extension-dialog-measuring .markdown-code-line-text {
   white-space: pre;
 }
-/* The header holds actions only — no language label, no fill — so the row ends
-   at the block's right edge and stays as thin as a 20px icon. */
+/* The header holds actions only — no language label — and carries a faint gray
+   band across the block's width, so the row reads as the fence's top edge while
+   the code below keeps no frame or surface of its own. */
 .markdown-code-header {
-  padding: 0 0 2px;
+  padding: 2px 4px;
+  background: var(--bg-subtle);
   color: var(--text-dim);
   font-size: 11px;
   display: flex;
@@ -1322,7 +1325,7 @@ pre, code {
   align-items: center;
   gap: 8px;
 }
-/* A fence's copy mark: borderless, because the block carries no frame either.
+/* A fence's copy mark: borderless, because only the block carries a frame.
    Muted until hovered or focused; the check that replaces it after a copy takes
    the success green for three seconds. */
 .markdown-code-copy {
@@ -1339,7 +1342,8 @@ pre, code {
   cursor: pointer;
   transition:
     background-color var(--duration-fast) var(--ease-standard),
-    color var(--duration-fast) var(--ease-standard);
+    color var(--duration-fast) var(--ease-standard),
+    opacity 0.12s ease;
 }
 .markdown-code-copy:hover {
   background: var(--bg-selected);
@@ -1355,6 +1359,18 @@ pre, code {
 .markdown-code-copy:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+/* The copy mark shows once the pointer is over the fence, or when the mark
+   itself has keyboard focus, so a finished block reads as text alone. Touch
+   screens have no hover and keep it visible. */
+@media (hover: hover) {
+  .markdown-code-actions .markdown-code-copy {
+    opacity: 0;
+  }
+  .markdown-code-block:hover .markdown-code-copy,
+  .markdown-code-copy:focus-visible {
+    opacity: 1;
+  }
 }
 .markdown-code-actions {
   display: flex;

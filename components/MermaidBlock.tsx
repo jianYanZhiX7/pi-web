@@ -423,7 +423,7 @@ export const CodeBlock = memo(function CodeBlock({ code, lang, headerAction, isS
         <pre
           style={{
             margin: 0,
-            padding: "2px 0",
+            padding: "4px 10px",
             fontSize: "calc(12.5px + var(--chat-font-size-offset, 0px))",
             lineHeight: 1.62,
             whiteSpace: "pre-wrap",
@@ -440,12 +440,12 @@ export const CodeBlock = memo(function CodeBlock({ code, lang, headerAction, isS
           renderer={renderCodeLines}
           customStyle={{
             margin: 0,
-            padding: "2px 0",
+            padding: "4px 10px",
             fontSize: "calc(12.5px + var(--chat-font-size-offset, 0px))",
             lineHeight: 1.62,
             fontWeight: "var(--font-mono-weight)",
             // The light `vs` theme puts its own 1px #ddd border and fill on <pre>;
-            // a fence draws neither frame nor surface, only its text.
+            // the block's frame lives on the wrapper, so the pre keeps neither.
             border: "none",
             borderRadius: 0,
             backgroundColor: "transparent",
