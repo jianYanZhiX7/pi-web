@@ -69,30 +69,29 @@ function renderCode(props) {
   );
 }
 
-/** Each line's number, read off the row that pairs it with its text. */
-function lineRows(html) {
-  return [...html.matchAll(/<span class="markdown-code-line"><span class="linenumber react-syntax-highlighter-line-number"[^>]*>(\d+)<\/span><span class="(?:token )?markdown-code-line-text"/g)]
-    .map((match) => match[1]);
+/** How many rows the fence lays out: one per line, and no number column beside them. */
+function codeRows(html) {
+  return [...html.matchAll(/<span class="markdown-code-line"><span class="(?:token )?markdown-code-line-text"/g)].length;
 }
 
-/** The code as the page shows it: the lines' text without their numbers. */
+/** The code as the page shows it. */
 function shownCode(html) {
   return html.match(/<code\b[^>]*>([\s\S]*)<\/code>/)[1]
-    .replace(/<span class="linenumber[^>]*>\d+<\/span>/g, "")
     .replace(/<[^>]+>/g, "")
     .replaceAll("&quot;", "\"").replaceAll("&#x27;", "'").replaceAll("&lt;", "<").replaceAll("&gt;", ">").replaceAll("&amp;", "&");
 }
 
 const wrapSample = "const x = 1;\n    indented(\"https://example.invalid/a/b/c\");\n\nlast();";
 
-test("CodeBlock renders the same numbered lines without tokens until the Prism languages load", () => {
+test("CodeBlock renders one row per line, without tokens, until the Prism languages load", () => {
   const html = renderCode({ code: "const x = 1;\nlet y = 2;", lang: "javascript" });
 
   assert.doesNotMatch(html, /class="token/);
-  assert.equal(html.match(/react-syntax-highlighter-line-number/g)?.length, 2);
+  assert.doesNotMatch(html, /linenumber/);
+  assert.equal(codeRows(html), 2);
   assert.match(html, /const x = 1;/);
   const fallback = renderCode({ code: wrapSample, lang: "javascript" });
-  assert.deepEqual(lineRows(fallback), ["1", "2", "3", "4"]);
+  assert.equal(codeRows(fallback), 4);
   assert.equal(shownCode(fallback), wrapSample);
 });
 
@@ -104,15 +103,14 @@ test("CodeBlock highlights code when not streaming", async () => {
   assert.match(html, /const/);
 });
 
-test("CodeBlock pairs each number with its line's text, so a long line wraps under its text (#1360)", () => {
+test("CodeBlock sets each line as its own wrapping row, so a long line wraps under its text (#1360)", () => {
   const html = renderCode({ code: wrapSample, lang: "javascript" });
 
   assert.match(html, /class="token/);
-  // A row per line: the number, then the text that wraps (app/globals.css),
-  // indentation and all, and nothing between the lines but their own text.
-  assert.deepEqual(lineRows(html), ["1", "2", "3", "4"]);
+  // A row per line, holding only the text that wraps (app/globals.css), so a long
+  // line goes on under its own text.
+  assert.equal(codeRows(html), 4);
   assert.equal(shownCode(html), wrapSample);
-  assert.match(html, /flex-shrink:0/);
 });
 
 test("CodeBlock keeps a block comment's color on every line it spans", () => {
@@ -123,15 +121,17 @@ test("CodeBlock keeps a block comment's color on every line it spans", () => {
   const middle = html.match(/<span class="token markdown-code-line-text" style="([^"]*)">   two\n<\/span>/)?.[1];
   assert.ok(first);
   assert.equal(middle, first);
-  assert.deepEqual(lineRows(html), ["1", "2", "3", "4"]);
+  assert.equal(codeRows(html), 4);
 });
 
-test("CodeBlock owns the pre background without a competing shorthand", () => {
+test("CodeBlock clears the highlighter's own pre fill without a competing shorthand", () => {
   for (const isStreaming of [false, true]) {
     const html = renderCode({ code: "const x = 1;", lang: "javascript", isStreaming });
     const pre = html.match(/<pre\b[^>]*>/)?.[0];
     assert.ok(pre);
-    assert.match(pre, /background-color:color-mix/);
+    // A fence draws no surface, and the longhand is what overrides the Prism
+    // theme's own fill; the e2e that switches themes checks it stays cleared.
+    assert.match(pre, /background-color:transparent/);
     assert.doesNotMatch(pre, /(?:[;\"]|^)background:/);
   }
 });

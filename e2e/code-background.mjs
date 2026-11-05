@@ -18,14 +18,9 @@ export async function checkCodeBackground(page) {
       await page.emulateMedia({ colorScheme });
       await page.waitForFunction((theme) => document.documentElement.dataset.theme === theme, colorScheme);
       await page.waitForFunction(() => {
-        const probe = document.createElement("div");
-        probe.style.backgroundColor = "color-mix(in srgb, var(--bg) 92%, var(--bg-panel))";
-        document.body.append(probe);
-        const expected = getComputedStyle(probe).backgroundColor;
-        probe.remove();
         const nodes = [...document.querySelectorAll(".markdown-code-block pre")];
         return nodes.length === 2 && nodes.every((node) => (
-          getComputedStyle(node).backgroundColor === expected
+          getComputedStyle(node).backgroundColor === "rgba(0, 0, 0, 0)"
           && getComputedStyle(node).borderTopWidth === "0px"
           && getComputedStyle(node.querySelector("code")).backgroundColor === "rgba(0, 0, 0, 0)"
         ));
@@ -36,5 +31,5 @@ export async function checkCodeBackground(page) {
     page.off("console", onConsole);
     await page.emulateMedia({ colorScheme: "light" });
   }
-  console.log("PASS: code and Mermaid source backgrounds survive repeated theme switches");
+  console.log("PASS: code and Mermaid source blocks stay unfilled across repeated theme switches");
 }

@@ -129,7 +129,6 @@ export function MermaidBlock({ code, isStreaming, defaultPreview = false }: Merm
 
   return (
     <PreviewFrame
-      lang="mermaid"
       actions={
         <>
           {renderState?.key === currentKey && renderState.status === "ready" && (
@@ -146,6 +145,25 @@ export function MermaidBlock({ code, isStreaming, defaultPreview = false }: Merm
     >
       {body}
     </PreviewFrame>
+  );
+}
+
+// A fence's two 13px marks: the copy affordance, and the check it becomes for
+// three seconds once the clipboard took the code.
+function CopyIcon() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <rect x="9" y="9" width="11" height="11" rx="2" />
+      <path d="M5 15V6a2 2 0 0 1 2-2h9" />
+    </svg>
+  );
+}
+
+function CopiedIcon() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <polyline points="20 6 9 17 4 12" />
+    </svg>
   );
 }
 
@@ -188,11 +206,10 @@ export function SvgDownloadButton({ onClick }: { onClick: () => void }) {
   );
 }
 
-export function PreviewFrame({ lang, actions, children }: { lang: string; actions: ReactNode; children: ReactNode }) {
+export function PreviewFrame({ actions, children }: { actions: ReactNode; children: ReactNode }) {
   return (
     <div className="markdown-code-block">
       <div className="markdown-code-header">
-        <span className="markdown-code-lang">{lang}</span>
         <div className="markdown-code-actions">{actions}</div>
       </div>
       {children}
@@ -328,28 +345,25 @@ delete codeBlockDarkTheme['pre[class*="language-"]'].background;
 type CodeLinesProps = Parameters<NonNullable<SyntaxHighlighterProps["renderer"]>>[0];
 
 /**
- * A fence's lines, each a row of its number and its text (`.markdown-code-line`
- * in app/globals.css): long lines wrap, as in pi's TUI, and a wrapped line goes
- * on under its own text, never under the number. The text keeps the row's own
- * classes, which color the later lines of a token that spans several (a block
- * comment).
+ * A fence's lines, each one row (`.markdown-code-line` in app/globals.css): long
+ * lines wrap, as in pi's TUI, and a wrapped line goes on under its own text. The
+ * text keeps the row's own classes, which color the later lines of a token that
+ * spans several (a block comment).
  */
 function renderCodeLines({ rows, stylesheet, useInlineStyles }: CodeLinesProps) {
-  return rows.map((row, index) => {
-    const children = row.children ?? [];
-    const number = children[0]?.properties?.className.includes("react-syntax-highlighter-line-number") ? children[0] : null;
-    const text = {
-      ...row,
-      properties: { ...row.properties, className: [...(row.properties?.className ?? []), "markdown-code-line-text"] },
-      children: number ? children.slice(1) : children,
-    };
-    return (
-      <span key={index} className="markdown-code-line">
-        {number && renderSyntaxNode({ node: number, stylesheet, useInlineStyles, key: "number" })}
-        {renderSyntaxNode({ node: text, stylesheet, useInlineStyles, key: "text" })}
-      </span>
-    );
-  });
+  return rows.map((row, index) => (
+    <span key={index} className="markdown-code-line">
+      {renderSyntaxNode({
+        node: {
+          ...row,
+          properties: { ...row.properties, className: [...(row.properties?.className ?? []), "markdown-code-line-text"] },
+        },
+        stylesheet,
+        useInlineStyles,
+        key: "text",
+      })}
+    </span>
+  ));
 }
 
 /**
@@ -385,21 +399,23 @@ export const CodeBlock = memo(function CodeBlock({ code, lang, headerAction, isS
   const copy = () => {
     copyText(code).then(() => {
       setCopied(true);
-      setTimeout(() => setCopied(false), 1500);
+      setTimeout(() => setCopied(false), 3000);
     });
   };
 
   return (
     <div className="markdown-code-block">
       <div className="markdown-code-header">
-        <span className="markdown-code-lang">{lang || "text"}</span>
         <div className="markdown-code-actions">
           {headerAction}
           <button
+            type="button"
             onClick={copy}
-            className="markdown-code-action"
+            className={`markdown-code-copy${copied ? " is-copied" : ""}`}
+            title={copied ? t("i18n.copied") : t("i18n.copy")}
+            aria-label={copied ? t("i18n.copied") : t("i18n.copy")}
           >
-            {copied ? t("i18n.copied") : t("i18n.copy")}
+            {copied ? <CopiedIcon /> : <CopyIcon />}
           </button>
         </div>
       </div>
@@ -407,12 +423,12 @@ export const CodeBlock = memo(function CodeBlock({ code, lang, headerAction, isS
         <pre
           style={{
             margin: 0,
-            padding: "11px 13px",
+            padding: "2px 0",
             fontSize: "calc(12.5px + var(--chat-font-size-offset, 0px))",
             lineHeight: 1.62,
             whiteSpace: "pre-wrap",
             overflowWrap: "anywhere",
-            backgroundColor: "color-mix(in srgb, var(--bg) 92%, var(--bg-panel))",
+            backgroundColor: "transparent",
           }}
         >
           <code style={{ fontFamily: "var(--font-mono)" }}>{code}</code>
@@ -421,20 +437,18 @@ export const CodeBlock = memo(function CodeBlock({ code, lang, headerAction, isS
         <SyntaxHighlighter
           language={highlighted ? lang || "text" : "text"}
           style={isDark ? codeBlockDarkTheme : vs}
-          showLineNumbers
-          lineNumberStyle={{ color: "var(--text-dim)", fontStyle: "normal", flexShrink: 0 }}
           renderer={renderCodeLines}
           customStyle={{
             margin: 0,
-            padding: "11px 13px",
+            padding: "2px 0",
             fontSize: "calc(12.5px + var(--chat-font-size-offset, 0px))",
             lineHeight: 1.62,
             fontWeight: "var(--font-mono-weight)",
-            // The light `vs` theme puts its own 1px #ddd border on <pre>; the
-            // block's wrapper already draws the frame.
+            // The light `vs` theme puts its own 1px #ddd border and fill on <pre>;
+            // a fence draws neither frame nor surface, only its text.
             border: "none",
             borderRadius: 0,
-            backgroundColor: "color-mix(in srgb, var(--bg) 92%, var(--bg-panel))",
+            backgroundColor: "transparent",
           }}
           codeTagProps={{ style: { fontFamily: "var(--font-mono)", fontWeight: "var(--font-mono-weight)" } }}
         >

@@ -90,7 +90,6 @@ export function SvgBlock({ code, isStreaming }: { code: string; isStreaming?: bo
 
   return (
     <PreviewFrame
-      lang="svg"
       actions={
         <>
           {ready && source && <SvgDownloadButton onClick={() => downloadSvgFile(source, "image.svg")} />}

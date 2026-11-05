@@ -1036,14 +1036,12 @@ pre, code {
   margin: 8px 0;
   border-radius: var(--radius-sm);
 }
+/* Inline code is set apart by its type alone: no fill and no ring, so it reads as
+   a word in the sentence rather than a chip inside it. */
 .markdown-body .markdown-inline-code {
-  background: var(--bg-subtle);
-  border-radius: var(--radius-sm);
-  padding: 1px 5px;
   color: var(--text);
   font-family: var(--font-mono);
   font-size: 0.92em;
-  box-shadow: inset 0 0 0 1px var(--border-hairline);
 }
 .markdown-body .contains-task-list {
   padding-left: 0;
@@ -1092,12 +1090,15 @@ pre, code {
   background: var(--bg-subtle);
   color: var(--text-muted);
 }
+/* A table reads as rows, not as a box: the frame keeps the two lines that part
+   it from the text above and below and no sides, so nothing draws a vertical
+   rule at the reply's edges. */
 .markdown-table-frame {
   width: 100%;
   margin: 8px 0;
   overflow: hidden;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
 }
 .markdown-table-wrap {
   width: 100%;
@@ -1280,17 +1281,16 @@ pre, code {
   margin-top: 3px;
 }
 
+/* A fence is nothing but its text: no frame, no fill, no gutter. The header row
+   above it holds the copy mark alone, so the block reads as a passage in code
+   type rather than a card dropped into the reply. */
 .markdown-code-block {
   position: relative;
   width: 100%;
   min-width: 0;
   max-width: 100%;
   margin: 6px 0;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
   overflow: hidden;
-  background: var(--bg);
-  box-shadow: 0 1px 0 var(--border-hairline);
 }
 /* Code fences wrap long lines, as pi's TUI does: a line is a row of its number
    and its text (CodeBlock's renderer), so a wrapped line goes on under its
@@ -1311,21 +1311,50 @@ pre, code {
 .extension-dialog-measuring .markdown-code-line-text {
   white-space: pre;
 }
+/* The header holds actions only — no language label, no fill — so the row ends
+   at the block's right edge and stays as thin as a 20px icon. */
 .markdown-code-header {
-  padding: 5px 10px;
-  background: var(--bg-panel);
-  border-bottom: 1px solid var(--border);
+  padding: 0 0 2px;
   color: var(--text-dim);
   font-size: 11px;
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
   align-items: center;
   gap: 8px;
 }
-.markdown-code-lang {
+/* A fence's copy mark: borderless, because the block carries no frame either.
+   Muted until hovered or focused; the check that replaces it after a copy takes
+   the success green for three seconds. */
+.markdown-code-copy {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 20px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-xs);
+  background: transparent;
   color: var(--text-muted);
-  font-family: var(--font-mono);
-  font-weight: 650;
+  cursor: pointer;
+  transition:
+    background-color var(--duration-fast) var(--ease-standard),
+    color var(--duration-fast) var(--ease-standard);
+}
+.markdown-code-copy:hover {
+  background: var(--bg-selected);
+  color: var(--text);
+}
+.markdown-code-copy:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -1px;
+}
+.markdown-code-copy.is-copied {
+  color: var(--success);
+}
+.markdown-code-copy:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 .markdown-code-actions {
   display: flex;
