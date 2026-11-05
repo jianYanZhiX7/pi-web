@@ -11,6 +11,7 @@ import { useI18n } from "@/hooks/useI18n";
  */
 export function WorktreeCreateForm({
   heading,
+  initialBranch,
   busy,
   error,
   showCancel,
@@ -18,6 +19,8 @@ export function WorktreeCreateForm({
   onCancel,
 }: {
   heading: string | null;
+  /** A branch the fresh composer's list named: its name in the field, ready for Create. */
+  initialBranch?: string;
   busy: boolean;
   error: string | null;
   showCancel: boolean;
@@ -25,7 +28,7 @@ export function WorktreeCreateForm({
   onCancel: () => void;
 }) {
   const { t } = useI18n();
-  const [branch, setBranch] = useState("");
+  const [branch, setBranch] = useState(initialBranch ?? "");
   const trimmed = branch.trim();
   const submit = () => {
     if (trimmed && !busy) onCreate(trimmed);

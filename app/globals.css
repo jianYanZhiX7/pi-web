@@ -2126,102 +2126,17 @@ pre, code {
 }
 
 /* The empty new-session page's header above the composer (ChatWindow), on
-   the composer's left edge: the brand (the logo, "Pi Web" and its versions
-   line), then the project and worktree row (NewSessionContextBar) right
-   above the composer card. Nothing on the right. */
+   the composer's left edge: the project and worktree row
+   (NewSessionContextBar) right above the composer card. Nothing else and
+   nothing on the right; the brand ("Pi Web" and its versions) lives in the
+   sidebar only. */
 .new-session-hero-inner {
   margin: 0 auto;
 }
 
-.new-session-brand {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  min-width: 0;
-  margin-bottom: 20px;
-}
-
-.new-session-logo {
-  flex: none;
-  width: 40px;
-  height: 40px;
-}
-
-.new-session-brand-text {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-  font-family: var(--font-mono);
-}
-
-.new-session-brand-name {
-  color: var(--text);
-  font-size: 22px;
-  font-weight: 700;
-  line-height: 1.15;
-  white-space: nowrap;
-}
-
-/* "web v<app> → v<latest> ↗ · pi v<pi>", on one line: where it is narrow,
-   pi's version gives way (its ellipsis); the version in use and the update
-   link are never cut. */
-.new-session-meta {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  min-width: 0;
-  color: var(--text-dim);
-  font-size: 11px;
-  line-height: 1.4;
-  white-space: nowrap;
-}
-
-.new-session-meta > * {
-  flex: none;
-}
-
-.new-session-meta > .new-session-meta-pi {
-  flex: 0 1 auto;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-/* Its box shows on hover and focus; the negative margins keep it off the
-   line's layout, and on a coarse pointer they grow the tap target the same
-   way. */
-.new-session-update {
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-  margin: -3px -4px;
-  padding: 3px 4px;
-  border-radius: 5px;
-  color: var(--accent);
-  font-weight: 600;
-  text-decoration: none;
-  transition: background 0.12s;
-}
-
-.new-session-update:hover,
-.new-session-update:focus-visible {
-  background: var(--bg-hover);
-}
-
-/* The ring inside the box, clear of the "→" and "·" beside it. */
-.new-session-update:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: -2px;
-}
-
-.new-session-update svg {
-  flex: none;
-}
-
-/* The project and worktree: a row of their own, under the brand. The
+/* The project and worktree: a row of its own above the composer. The
    project button's own padding is pulled out on the left, so its folder
-   icon stands on the logo's and the composer card's edge. */
+   icon stands on the composer card's edge. */
 .new-session-context {
   display: flex;
   flex-wrap: nowrap;
@@ -2229,30 +2144,6 @@ pre, code {
   min-width: 0;
   min-height: 28px;
   margin: 0 0 6px -6px;
-}
-
-@media (max-width: 640px) {
-  .new-session-brand {
-    margin-bottom: 16px;
-  }
-
-  .new-session-logo {
-    width: 32px;
-    height: 32px;
-  }
-
-  .new-session-brand-name {
-    font-size: 20px;
-  }
-}
-
-@media (pointer: coarse) {
-  .new-session-update {
-    margin-top: -8px;
-    margin-bottom: -8px;
-    padding-top: 8px;
-    padding-bottom: 8px;
-  }
 }
 
 /* The project and worktree picker (ProjectWorktreePicker). The files' (the
@@ -2291,24 +2182,26 @@ pre, code {
   transition: background 0.12s, color 0.12s;
 }
 
-/* Above a fresh composer (inline): no box until hovered or open, 12px, the
-   folder icon, the project's name and a chevron; the branch icon (the accent
-   for a linked checkout), the branch and a chevron. The names are what tell
-   projects apart there; the full path is the tooltip and the menu's rows.
-   The row never wraps: the branch gives way first, cut at its left, then
-   the name, cut at its end (shrinking with their text, a long branch took
-   a short name's last pixels), down to minimum widths of their own (never
-   shares of the row: a lone button squeezed to a share of itself would end
-   up 0px wide). "First" takes a factor of a million: at 1000 the other
-   still lost a fraction of a pixel, enough for its ellipsis. */
+/* Above a fresh composer (inline): no boxes until hovered or open, 12px, two
+   lines on the composer's left edge. First the folder icon, the project's
+   name (its display name or its folder's) and its whole path, which gives
+   way first, cut at its left (the end of a path is what tells it apart), and
+   a chevron. Then the branch icon (the accent for a linked checkout), the
+   branch its checkout is on and a chevron; the branch menu lists every
+   branch of the repository. Each line stays on one row, cut to the page's
+   width. */
 .project-picker.is-inline {
-  gap: 2px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0;
+  max-width: 100%;
   font-size: 12px;
 }
 
 .project-picker.is-inline .project-picker-button {
   gap: 4px;
   height: 26px;
+  max-width: 100%;
   padding: 0 6px;
   border: 0;
   border-radius: 6px;
@@ -2321,12 +2214,22 @@ pre, code {
 
 .project-picker.is-inline .project-picker-button:not(.is-project) {
   min-width: 72px;
-  flex-shrink: 1000000;
 }
 
 .project-picker.is-inline .project-picker-button:hover,
 .project-picker.is-inline .project-picker-button[aria-expanded="true"] {
   background: var(--bg-hover);
+}
+
+/* The name keeps its room whole: the path beside it is what gives way. */
+.project-picker.is-inline .project-picker-name {
+  flex: none;
+}
+
+/* The "·" between the project's name and its path. */
+.project-picker-sep {
+  flex: none;
+  color: var(--text-dim);
 }
 
 /* The project's name (its display name, else its folder's), cut at its
@@ -2359,8 +2262,11 @@ pre, code {
   text-overflow: ellipsis;
 }
 
+/* Inline the path is the whole absolute one: as wide as it needs, cut only
+   where the page runs out. */
 .project-picker.is-inline .project-picker-path {
-  max-width: 32ch;
+  flex: 0 1 auto;
+  max-width: 100%;
 }
 
 .project-picker-button:hover,

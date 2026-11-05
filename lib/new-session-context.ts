@@ -52,6 +52,12 @@ export interface NewSessionContext {
   worktrees: WorktreeChoice[] | null;
   /** The checkout of `cwd`, server-resolved: one of `worktrees` verbatim. */
   currentWorktreePath: string | null;
+  /**
+   * Every local branch of the repository, sorted; null where `worktrees` is
+   * (the fresh composer's branch menu lists them all, a branch without a
+   * checkout opening the "New worktree…" form).
+   */
+  branches: readonly string[] | null;
   /** Every project the sidebar knows, in its group order. */
   projects: readonly ProjectChoice[];
 }
@@ -103,9 +109,14 @@ export function contextForCwd(
   }
   const moved = move?.cwd === cwd ? move : null;
   if (moved && context?.worktrees && context.project.key === moved.project.key) {
+    // A checkout just created at an existing branch is in the list already.
+    const branches = context.branches && moved.branch && !context.branches.includes(moved.branch)
+      ? [...context.branches, moved.branch].sort()
+      : context.branches;
     return {
       ...context,
       cwd,
+      branches,
       worktrees: [...context.worktrees, { path: cwd, branch: moved.branch, isMain: false }],
       currentWorktreePath: cwd,
     };
@@ -119,6 +130,7 @@ export function contextForCwd(
     project: alias === undefined ? project : { ...project, alias },
     worktrees: null,
     currentWorktreePath: null,
+    branches: null,
     projects,
   };
 }
@@ -130,6 +142,7 @@ export interface WorktreeListing {
   projectKey: string;
   isTopLevel: boolean;
   worktrees: readonly { path: string }[];
+  branches?: readonly string[];
 }
 
 /**
@@ -229,6 +242,29 @@ export function currentWorktreeOf(context: ProjectWorktreeContext): WorktreeChoi
     ?? null;
 }
 
+/** A row of the fresh composer's branch menu. */
+export interface BranchChoice {
+  branch: string;
+  /** The checkout holding it; null for a branch no worktree has checked out. */
+  checkout: WorktreeChoice | null;
+  /** The branch of the checkout in use. */
+  current: boolean;
+}
+
+/**
+ * Every local branch with the checkout it is on, if any: the menu lists them
+ * all, a branch without one opening the "New worktree…" form (picking a
+ * branch with a checkout moves there instead).
+ */
+export function branchChoices(context: ProjectWorktreeContext): BranchChoice[] {
+  const worktrees = context.worktrees ?? [];
+  const current = currentWorktreeOf(context);
+  return (context.branches ?? []).map((branch) => {
+    const checkout = worktrees.find((worktree) => worktree.branch === branch) ?? null;
+    return { branch, checkout, current: checkout !== null && checkout.path === current?.path };
+  });
+}
+
 /**
  * Equal for contexts that show the same: the sidebar rebuilds its context on
  * every session-list refresh and running poll, and reports it only when this
@@ -243,6 +279,7 @@ export function newSessionContextKey(context: NewSessionContext | null): string 
     context.project.alias ?? null,
     context.currentWorktreePath,
     context.worktrees?.map((worktree) => [worktree.path, worktree.branch, worktree.isMain]) ?? null,
+    context.branches ?? null,
     context.projects.map((project) => [project.key, project.root, project.alias ?? null]),
   ]);
 }

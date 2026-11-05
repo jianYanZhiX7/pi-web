@@ -292,6 +292,18 @@ export async function listWorktrees(cwd: string): Promise<WorktreeInfo[]> {
     .map(({ path, branch }, index) => ({ path, branch, isMain: index === 0 }));
 }
 
+/**
+ * Every local branch, sorted by name: the fresh composer's branch menu lists
+ * them all, a branch without a checkout opening the "New worktree…" form
+ * (`addWorktree` reuses an existing branch). Remote-tracking branches are not
+ * listed; one can still be named in that form, which starts from its origin
+ * tip.
+ */
+export async function listBranches(cwd: string): Promise<string[]> {
+  const out = await git(cwd, ["for-each-ref", "--format=%(refname:short)", "refs/heads"]);
+  return out.split("\n").map((line) => line.trim()).filter(Boolean).sort();
+}
+
 function findWorktreeByPath(worktrees: readonly WorktreeInfo[], candidate: string): WorktreeInfo | undefined {
   return worktrees.find((worktree) => samePath(worktree.path, candidate));
 }

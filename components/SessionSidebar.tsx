@@ -289,6 +289,8 @@ interface WorktreeState {
   /** Canonical path of the checkout containing forCwd, resolved server-side. */
   currentWorktreePath: string | null;
   worktrees: WorktreeEntry[];
+  /** Every local branch of the repository, sorted. */
+  branches: string[];
 }
 
 interface ProjectSelection {
@@ -1166,7 +1168,7 @@ export function SessionSidebar({ selectedSessionId, onSelectSession, onNewSessio
     setWorktreeLoadingCwd(selectedCwd);
     fetch(`/api/worktrees?cwd=${encodeURIComponent(selectedCwd)}`)
       .then((r) => r.json())
-      .then((d: { projectRoot?: string; projectKey?: string; isGit?: boolean; isTopLevel?: boolean; currentWorktreePath?: string | null; worktrees?: WorktreeEntry[]; error?: string }) => {
+      .then((d: { projectRoot?: string; projectKey?: string; isGit?: boolean; isTopLevel?: boolean; currentWorktreePath?: string | null; worktrees?: WorktreeEntry[]; branches?: string[]; error?: string }) => {
         if (cancelled) return;
         setWorktreeLoadingCwd(null);
         if (d.error || !d.projectRoot) {
@@ -1184,6 +1186,7 @@ export function SessionSidebar({ selectedSessionId, onSelectSession, onNewSessio
           isTopLevel: d.isTopLevel ?? false,
           currentWorktreePath: d.currentWorktreePath ?? null,
           worktrees: d.worktrees ?? [],
+          branches: d.branches ?? [],
         });
       })
       .catch(() => {
@@ -1322,7 +1325,11 @@ export function SessionSidebar({ selectedSessionId, onSelectSession, onNewSessio
       }
       const path = data.path;
       setWorktreeState((prev) => (prev && prev.projectKey === project.key && !prev.worktrees.some((worktree) => worktree.path === path)
-        ? { ...prev, worktrees: [...prev.worktrees, { path, branch, isMain: false }] }
+        ? {
+          ...prev,
+          worktrees: [...prev.worktrees, { path, branch, isMain: false }],
+          branches: prev.branches.includes(branch) ? prev.branches : [...prev.branches, branch].sort(),
+        }
         : prev));
       setWtRefreshKey((k) => k + 1);
       return { path };
@@ -1570,6 +1577,7 @@ export function SessionSidebar({ selectedSessionId, onSelectSession, onNewSessio
       project: withProjectAlias(selectedProject, projectNames),
       worktrees: listed ? worktreeState.worktrees.map(({ path, branch, isMain }) => ({ path, branch, isMain })) : null,
       currentWorktreePath: listed ? currentWorktreePath : null,
+      branches: listed ? worktreeState.branches : null,
       projects: projectChoiceList,
     };
   }, [selectedCwd, selectedProject, showWorktreeSwitcher, worktreeState, currentWorktreePath, projectChoiceList, projectNames]);
@@ -3220,7 +3228,7 @@ export function SessionSidebar({ selectedSessionId, onSelectSession, onNewSessio
             <ProjectWorktreePicker
               handleRef={filesPickerRef}
               layout={stacked ? "row" : "stacked"}
-              context={newSessionContext ?? { project: null, worktrees: null, currentWorktreePath: null, projects: projectChoiceList }}
+              context={newSessionContext ?? { project: null, worktrees: null, currentWorktreePath: null, branches: null, projects: projectChoiceList }}
               mobile={isMobile}
               label={t("sidebar.projectAndWorktree")}
               placeholder={initialSessionId && !restoredRef.current ? "" : t("sidebar.selectProject")}

@@ -3,6 +3,7 @@
 import { useEffect, useId, useImperativeHandle, useRef, useState, type ReactNode, type Ref } from "react";
 import { useI18n } from "@/hooks/useI18n";
 import {
+  branchChoices,
   currentWorktreeOf,
   describeProjectChoices,
   projectChoices,
@@ -32,7 +33,8 @@ export interface ProjectWorktreePickerHandle {
 }
 
 type MenuBody =
-  | { kind: "create"; busy: boolean; error: string | null }
+  /** `initialBranch`: a branch the list named but no checkout holds. */
+  | { kind: "create"; busy: boolean; error: string | null; initialBranch?: string }
   /** A removal that needs an answer: a checkout with changes (force?), or one that failed. */
   | { kind: "remove"; worktree: WorktreeChoice; dirty: boolean; busy: boolean; error: string | null };
 
@@ -55,8 +57,9 @@ interface MenuState {
 
 interface Props {
   /**
-   * "inline": the bar above a fresh composer, the project's name and the
-   * worktree's branch as text on the page (no path, no notes).
+   * "inline": the bar above a fresh composer, two lines of text on the page:
+   * the project's name and its whole path, then the branch its checkout is
+   * on (the menu lists every branch of the repository).
    * The files' own: "stacked", full width, one under the other (the files
    * tab); "row", side by side in one row (the files below the sessions).
    * Both have the files' boxes (the whole path, the worktree's notes) and
@@ -238,8 +241,14 @@ export function ProjectWorktreePicker({
   const classic = !mobile;
   const { project, worktrees } = context;
   const current = currentWorktreeOf(context);
-  // Inline, the project's name as the menus name it: its display name, else
-  // its folder's, with the parent folder only where two projects share it.
+  // Inline, the branch menu lists every local branch: a branch a worktree
+  // holds is what picking it moves to, one without a checkout opens the
+  // "New worktree…" form (its name prefilled).
+  const branchMenu = inline && (context.branches?.length ?? 0) > 0;
+  const worktreeMenuTitle = t(branchMenu ? "sidebar.switchBranch" : "sidebar.switchWorktree");
+  // The project's name as the menus name it (a display name, even one only
+  // the list knows, else its folder's). The path beside it tells twins apart:
+  // no parent folder and "/" as in the menus' rows.
   const projectName = inline && project
     ? describeProjectChoices(projectChoices(context)).find(({ choice }) => choice.key === project.key)
     : undefined;
@@ -304,7 +313,10 @@ export function ProjectWorktreePicker({
     if (!state || state.body?.kind !== "create" || !project) return;
     const { id } = state;
     const setForm = (busy: boolean, error: string | null) => {
-      updateMenu(id, (menuState) => ({ ...menuState, body: { kind: "create", busy, error } }));
+      updateMenu(id, (menuState) => ({
+        ...menuState,
+        body: menuState.body?.kind === "create" ? { ...menuState.body, busy, error } : { kind: "create", busy, error },
+      }));
     };
     setForm(true, null);
     let result: { path: string } | { error: string };
@@ -397,8 +409,31 @@ export function ProjectWorktreePicker({
     ];
   };
 
+  // The fresh composer's menu: every branch, the checkout holding it (the
+  // "main" note), and the one in use checked. A branch no checkout has opens
+  // the "New worktree…" form with its name in the field.
+  const branchItems = (): SidebarMenuItem[] => branchChoices(context).map(({ branch, checkout, current: inUse }): SidebarMenuItem => ({
+    type: "item",
+    id: `branch:${branch}`,
+    label: branch,
+    note: checkout?.isMain ? t("sidebar.main") : undefined,
+    title: checkout ? t("sidebar.worktreePath", { path: checkout.path }) : t("sidebar.createWorktreeTitle"),
+    checked: inUse,
+    onSelect: ({ keepOpen }) => {
+      if (!checkout) {
+        // The menu stays open: the form replaces the list's footer (or the sheet's body).
+        keepOpen();
+        showBody({ kind: "create", busy: false, error: null, initialBranch: branch });
+        return;
+      }
+      if (project && !inUse) {
+        onPick({ cwd: checkout.path, projectKey: project.key, projectRoot: project.root }, "worktree");
+      }
+    },
+  }));
+
   const worktreeItems = (): SidebarMenuItem[] => [
-    ...(worktrees ?? []).map((worktree): SidebarMenuItem => classic && body?.kind === "remove" && body.dirty && body.worktree.path === worktree.path ? {
+    ...(branchMenu ? branchItems() : (worktrees ?? []).map((worktree): SidebarMenuItem => classic && body?.kind === "remove" && body.dirty && body.worktree.path === worktree.path ? {
       type: "custom",
       id: `worktree:${worktree.path}`,
       content: (
@@ -432,7 +467,7 @@ export function ProjectWorktreePicker({
           onPick({ cwd: worktree.path, projectKey: project.key, projectRoot: project.root }, "worktree");
         }
       },
-    }),
+    })),
     // Classic: no line of its own (the rows have theirs), and gone while its form shows below.
     ...(classic ? [] : [{ type: "separator", id: "separator" } as const]),
     ...(classic && body?.kind === "create" ? [] : [{
@@ -456,12 +491,13 @@ export function ProjectWorktreePicker({
   // Classic: the form, or what went wrong, under the list.
   let menuFooter: ReactNode = null;
   if (classic && menu?.kind === "worktree") {
-    menuTitle = t("sidebar.switchWorktree");
+    menuTitle = worktreeMenuTitle;
     menuItems = worktreeItems();
     if (body?.kind === "create") {
       menuFooter = (
         <WorktreeCreateForm
           heading={null}
+          initialBranch={body.initialBranch}
           busy={body.busy}
           error={body.error}
           showCancel
@@ -473,10 +509,11 @@ export function ProjectWorktreePicker({
       menuFooter = <div className="sidebar-worktree-error" role="alert">{body.error}</div>;
     }
   } else if (body?.kind === "create") {
-    menuTitle = newWorktreeTitle;
+    menuTitle = body.initialBranch ? worktreeMenuTitle : newWorktreeTitle;
     menuBody = (
       <WorktreeCreateForm
         heading={mobile ? null : menuTitle}
+        initialBranch={body.initialBranch}
         busy={body.busy}
         error={body.error}
         showCancel={!mobile}
@@ -501,13 +538,15 @@ export function ProjectWorktreePicker({
     menuTitle = t("workspace.project");
     menuItems = projectItems();
   } else if (menu?.kind === "worktree") {
-    menuTitle = t("sidebar.switchWorktree");
+    menuTitle = worktreeMenuTitle;
     menuItems = worktreeItems();
   }
   const filter = menu?.kind === "project"
     // Main showed the projects' field only past 8 of them, the worktrees' from 8.
     ? { placeholder: t("sidebar.filterProjects"), emptyLabel: t("sidebar.noMatchingProjects"), minChoices: classic ? 9 : undefined }
-    : { placeholder: t("sidebar.filterWorktrees"), emptyLabel: t("sidebar.noMatchingWorktrees") };
+    : branchMenu
+      ? { placeholder: t("sidebar.filterBranches"), emptyLabel: t("sidebar.noMatchingBranches") }
+      : { placeholder: t("sidebar.filterWorktrees"), emptyLabel: t("sidebar.noMatchingWorktrees") };
   // A dot in the files' project box: something runs or waits in another project.
   const otherActivity = stacked && projectActivity !== undefined && [...projectActivity].some(
     ([key, { running, unread }]) => key !== project?.key && (running > 0 || unread > 0),
@@ -524,18 +563,21 @@ export function ProjectWorktreePicker({
         aria-expanded={menu?.kind === "project"}
         onClick={(event) => openMenu("project", event.currentTarget)}
       >
-        {/* Inline: a folder icon, the name (cut at its end) and a chevron;
-            the tooltip is the path. The files': the whole path, cut at its
-            left (the folder name at its end is what tells paths apart), no
-            icon and no chevron: the path is the box. A project the user
-            named shows that name; the tooltip keeps the path. */}
+        {/* Inline: a folder icon, then the project's name (its display name
+            or its folder's) and its whole path, cut at the path's left, and a
+            chevron; nothing on this line tells two same-named projects apart
+            without the path, which is why it is text here. The files': the
+            whole path, cut at its left (the folder name at its end is what
+            tells paths apart), no icon and no chevron: the path is the box. */}
         {inline && <FolderIcon size={12} className="project-picker-icon" />}
-        {/* A twin's parent folder is cut before its name, the "/" never. */}
         {inline && project ? (
-          <span className="project-picker-name">
-            {project.alias === undefined && projectName?.note && <><span className="project-picker-parent">{projectName.note}</span>/</>}
-            <span className="project-picker-leaf">{project.alias ?? projectName?.name ?? projectNameOf(project.root)}</span>
-          </span>
+          <>
+            <span className="project-picker-name">
+              <span className="project-picker-leaf">{project.alias ?? projectName?.name ?? projectNameOf(project.root)}</span>
+            </span>
+            <span className="project-picker-sep" aria-hidden="true">·</span>
+            <span className="project-picker-path"><span>{project.root}</span></span>
+          </>
         ) : project?.alias !== undefined ? (
           <span className="project-picker-label is-alias">{project.alias}</span>
         ) : project ? (
