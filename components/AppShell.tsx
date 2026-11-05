@@ -30,7 +30,7 @@ import { useViewportHeight } from "@/hooks/useViewportHeight";
 import { useResizablePanel } from "@/hooks/useResizablePanel";
 import { useAudio } from "@/hooks/useAudio";
 import { copyText } from "@/lib/clipboard";
-import { tabRunPhaseAfterEnd, type TabRunPhase } from "@/lib/tab-status";
+import { cwdBranch, formatTabBaseTitle, tabRunPhaseAfterEnd, type TabRunPhase } from "@/lib/tab-status";
 import { useTabRunIndicator } from "@/hooks/useTabRunIndicator";
 import { getFileName } from "@/lib/file-paths";
 import { buildAtMentionText, buildFileAtMentionsText, buildFileLineMentionText } from "@/lib/file-fuzzy";
@@ -1600,7 +1600,14 @@ export function AppShell() {
   // Subagent work tabs: like files, only the active one is mounted.
   const activeAgentTab = agentTabs.find((tab) => `agent:${tab.sessionId}` === activeFileTabId) ?? null;
   const activeCwdName = activeCwd ? getFileName(activeCwd) || activeCwd : null;
-  const windowTitle = activeCwdName ?? "Pi Web";
+  // The tab names the checkout the page shows and its branch: the open chat's,
+  // then any session's of that cwd (the files workspace without a chat), then
+  // the sidebar's worktree listing for a folder no session has yet.
+  const windowTitle = formatTabBaseTitle(activeCwdName, cwdBranch(activeCwd, {
+    selected: selectedSession,
+    sessions: sessionCatalog,
+    context: sidebarNewSessionContext,
+  }));
   const tabRunPhase: TabRunPhase = chatRunning || (selectedSession !== null && runningSessionIds.has(selectedSession.id))
     ? "running"
     : runPhase;

@@ -1,6 +1,7 @@
 /**
- * 标签页的运行指示。标题只有文字，颜色只体现在 favicon 上：运行中是盲文转圈，
- * 结束后是字形加彩色圆点。纯函数，`hooks/useTabRunIndicator.ts` 负责写入。
+ * 标签页的运行指示与标题文字。标题只有文字，颜色只体现在 favicon 上：运行中是盲文转圈，
+ * 结束后是字形加彩色圆点。名字部分是目录名加上它所在的分支。纯函数，
+ * `hooks/useTabRunIndicator.ts` 负责写入。
  */
 export type TabRunPhase = "idle" | "running" | "done" | "failed";
 export type TabRunStatus = "done" | "failed";
@@ -29,6 +30,49 @@ export function formatTabTitle(baseTitle: string, phase: TabRunPhase, frame = 0)
   const base = baseTitle.trim() === "" ? "Pi Web" : baseTitle;
   const prefix = tabRunPrefix(phase, frame);
   return prefix ? `${prefix} ${base}` : base;
+}
+
+/**
+ * 标题的名字部分：页面所示检出的目录名，其后是它所在的分支。运行标记加在它前面。
+ */
+export function formatTabBaseTitle(projectName: string | null | undefined, branch: string | null | undefined): string {
+  const name = projectName?.trim() || "Pi Web";
+  const ref = branch?.trim() ?? "";
+  return ref ? `${name} · ${ref}` : name;
+}
+
+export interface CwdBranchSources {
+  /** 打开的对话：它的分支随会话列表一起由服务端解析。 */
+  selected: { cwd: string; branch?: string | null } | null;
+  /** 全部会话：文件工作区停在没有对话打开的目录时用。 */
+  sessions: readonly { cwd: string; branch?: string | null }[];
+  /** 侧栏对它自己 cwd 的报告：检出列表只出现在检出顶层。 */
+  context: {
+    cwd: string;
+    currentWorktreePath: string | null;
+    worktrees: readonly { path: string; branch: string | null }[] | null;
+  } | null;
+}
+
+/**
+ * 跟在目录名后的分支：先取打开对话的，再取该 cwd 任一会话的，最后取新目录的
+ * 检出列表（顶层才有，子目录给不出）。非 git 目录、detached HEAD 为 null。
+ */
+export function cwdBranch(cwd: string | null, sources: CwdBranchSources): string | null {
+  if (!cwd) return null;
+  const branchIn = (session: { cwd: string; branch?: string | null } | null | undefined) =>
+    session && session.cwd === cwd && session.branch ? session.branch : null;
+  const fromSelected = branchIn(sources.selected);
+  if (fromSelected) return fromSelected;
+  for (const session of sources.sessions) {
+    const branch = branchIn(session);
+    if (branch) return branch;
+  }
+  const context = sources.context;
+  if (context?.cwd === cwd && context.currentWorktreePath) {
+    return context.worktrees?.find((worktree) => worktree.path === context.currentWorktreePath)?.branch ?? null;
+  }
+  return null;
 }
 
 export interface TabRunEnd {
