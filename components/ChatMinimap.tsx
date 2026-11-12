@@ -8,7 +8,6 @@ import {
   normalizeDisplayMath,
 } from "@/lib/markdown";
 import { isMessageGroupAnchor, splitFinalAssistantBlocks } from "@/lib/message-display";
-import { loadMinimapPreviewLocked, saveMinimapPreviewLocked } from "@/lib/minimap-preview-lock";
 import type { AgentMessage, AssistantMessage, CustomMessage, TextContent, UserMessage } from "@/lib/types";
 import { useI18n } from "@/hooks/useI18n";
 import styles from "./ChatMinimap.module.css";
@@ -24,13 +23,9 @@ interface Props {
   turnsBefore: number;
 }
 
-const MINIMAP_WIDTH = 36;
+const MINIMAP_WIDTH = 28;
 const MAX_NODE_GAP = 50;
 const MINIMAP_PADDING = 12;
-// The lock button sits at the bottom of the rail (6px inset + 30px): nodes stop
-// above it so the last turn stays visible and clickable.
-const MINIMAP_BOTTOM_PADDING = 36 + MINIMAP_PADDING;
-const PREVIEW_HIDE_DELAY = 250;
 const NAVIGATION_ACTIVE_LOCK_MS = 1600;
 
 interface AssistantPreview {
@@ -225,7 +220,7 @@ function layoutNodes(allNodes: NodeInfo[], minimapHeight: number): NodeLayout {
   }
 
   const height = Math.max(1, minimapHeight);
-  const usableHeight = Math.max(0, height - MINIMAP_PADDING - MINIMAP_BOTTOM_PADDING);
+  const usableHeight = Math.max(0, height - MINIMAP_PADDING * 2);
   if (allNodes.length === 1) {
     return {
       nodes: [{ ...allNodes[0], topRatio: MINIMAP_PADDING / height }],
@@ -259,8 +254,7 @@ export const ChatMinimap = memo(function ChatMinimap({
   const [allNodes, setAllNodes] = useState<NodeInfo[]>([]);
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
   const [minimapHeight, setMinimapHeight] = useState(600);
-  const [minimapHovered, setMinimapHovered] = useState(false);
-  const [locked, setLocked] = useState(loadMinimapPreviewLocked);
+  const [previewOpen, setPreviewOpen] = useState(false);
   const [mouseYRatio, setMouseYRatio] = useState<number | null>(null);
   const draggingRef = useRef(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -272,7 +266,6 @@ export const ChatMinimap = memo(function ChatMinimap({
   });
   const previewBoxRef = useRef<HTMLDivElement>(null);
   const previewItemRefs = useRef(new Map<number, HTMLDivElement>());
-  const previewHideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const activeNodeLockRef = useRef<{ index: number; until: number } | null>(null);
   const pendingNavigationRef = useRef<{
     nodeIndex: number;
@@ -552,45 +545,37 @@ export const ChatMinimap = memo(function ChatMinimap({
     scrollEl.scrollTo({ top: Math.max(0, targetTop), behavior: "smooth" });
   }, [lockActiveNode, onRevealHistory, scrollContainer]);
 
-  const cancelPreviewHide = useCallback(() => {
-    if (!previewHideTimerRef.current) return;
-    clearTimeout(previewHideTimerRef.current);
-    previewHideTimerRef.current = null;
-  }, []);
-
-  const showPreview = useCallback(() => {
-    if (locked) return;
-    cancelPreviewHide();
-    setMinimapHovered(true);
-  }, [cancelPreviewHide, locked]);
-
-  const toggleLock = useCallback(() => {
-    const next = !locked;
-    setLocked(next);
-    saveMinimapPreviewLocked(next);
-    if (next) {
-      cancelPreviewHide();
-      setMinimapHovered(false);
-      setMouseYRatio(null);
-    }
-  }, [cancelPreviewHide, locked]);
-
-  const schedulePreviewHide = useCallback(() => {
-    cancelPreviewHide();
-    previewHideTimerRef.current = setTimeout(() => {
-      previewHideTimerRef.current = null;
-      setMinimapHovered(false);
-      setMouseYRatio(null);
-    }, PREVIEW_HIDE_DELAY);
-  }, [cancelPreviewHide]);
-
-  useEffect(() => () => cancelPreviewHide(), [cancelPreviewHide]);
+  useEffect(() => {
+    if (!previewOpen) return;
+    const onPointerDown = (event: PointerEvent) => {
+      const container = containerRef.current;
+      if (container && event.target instanceof Node && container.contains(event.target)) return;
+      setPreviewOpen(false);
+    };
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== "Escape" || event.defaultPrevented) return;
+      const target = event.target instanceof HTMLElement ? event.target : null;
+      if (target?.isContentEditable) return;
+      const tag = target?.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
+      if (target?.closest('[role="dialog"], [role="menu"], [role="listbox"]')) return;
+      event.preventDefault();
+      event.stopPropagation();
+      setPreviewOpen(false);
+    };
+    window.addEventListener("pointerdown", onPointerDown);
+    window.addEventListener("keydown", onKeyDown, true);
+    return () => {
+      window.removeEventListener("pointerdown", onPointerDown);
+      window.removeEventListener("keydown", onKeyDown, true);
+    };
+  }, [previewOpen]);
 
   const handleMouseDown = useCallback((event: React.MouseEvent<HTMLDivElement>) => {
     if (!visible) return;
 
     draggingRef.current = true;
-    showPreview();
+    setPreviewOpen(true);
     const rect = event.currentTarget.getBoundingClientRect();
     const pointerRatio = Math.max(0, Math.min(1, (event.clientY - rect.top) / rect.height));
     setMouseYRatio(pointerRatio);
@@ -614,20 +599,20 @@ export const ChatMinimap = memo(function ChatMinimap({
     };
     window.addEventListener("mousemove", onMove);
     window.addEventListener("mouseup", onUp);
-  }, [findNearestNode, scrollToNode, showPreview, visible]);
+  }, [findNearestNode, scrollToNode, visible]);
 
   const nearestNode = mouseYRatio === null ? null : findNearestNode(mouseYRatio);
   const nearestNodeIndex = nearestNode?.index ?? null;
 
   useEffect(() => {
-    if (!minimapHovered || nearestNodeIndex === null) return;
+    if (!previewOpen || nearestNodeIndex === null) return;
     const previewBox = previewBoxRef.current;
     const previewItem = previewItemRefs.current.get(nearestNodeIndex);
     if (!previewBox || !previewItem) return;
     const targetTop = previewItem.offsetTop
       - (previewBox.clientHeight - previewItem.offsetHeight) / 2;
     previewBox.scrollTop = Math.max(0, targetTop);
-  }, [allNodes, minimapHovered, nearestNodeIndex]);
+  }, [allNodes, previewOpen, nearestNodeIndex]);
 
   if (!visible) return null;
 
@@ -640,8 +625,7 @@ export const ChatMinimap = memo(function ChatMinimap({
     <div
       ref={containerRef}
       onMouseDown={handleMouseDown}
-      onMouseEnter={showPreview}
-      onMouseLeave={schedulePreviewHide}
+      onMouseLeave={() => setMouseYRatio(null)}
       onMouseMove={(event) => {
         const rect = event.currentTarget.getBoundingClientRect();
         setMouseYRatio((event.clientY - rect.top) / rect.height);
@@ -686,7 +670,7 @@ export const ChatMinimap = memo(function ChatMinimap({
       />
 
       {positionedNodes.map((node) => {
-        const isNearest = minimapHovered && nearestNode?.index === node.index;
+        const isNearest = nearestNode?.index === node.index;
         const isActive = activeIndex === node.index;
 
         return (
@@ -724,45 +708,11 @@ export const ChatMinimap = memo(function ChatMinimap({
         );
       })}
 
-      <button
-        type="button"
-        className={styles.lock}
-        data-minimap-lock={locked ? "on" : "off"}
-        aria-pressed={locked}
-        title={t(locked ? "chatMinimap.unlockPreview" : "chatMinimap.lockPreview")}
-        aria-label={t("chatMinimap.lockPreview")}
-        onMouseDown={(event) => event.stopPropagation()}
-        onClick={(event) => {
-          event.stopPropagation();
-          toggleLock();
-        }}
-      >
-        <svg
-          width="16"
-          height="16"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          aria-hidden="true"
-        >
-          <rect x="4" y="11" width="16" height="10" rx="2" />
-          {locked ? (
-            <path d="M8 11V7a4 4 0 0 1 8 0v4" />
-          ) : (
-            <path d="M8 11V7a4 4 0 0 1 7.9-.9" />
-          )}
-        </svg>
-      </button>
-
-      {minimapHovered && allNodes.length > 0 && (
+      {previewOpen && allNodes.length > 0 && (
         <div
           ref={previewBoxRef}
           className={styles.preview}
           data-minimap-preview-box=""
-          onMouseEnter={showPreview}
           onMouseDown={(event) => event.stopPropagation()}
           onMouseMove={(event) => event.stopPropagation()}
         >
@@ -812,6 +762,7 @@ export const ChatMinimap = memo(function ChatMinimap({
                     data-minimap-preview-user={node.index}
                     onClick={() => {
                       scrollToNode(node, "smooth");
+                      setPreviewOpen(false);
                     }}
                   >
                     <span className={styles.userText}>
@@ -828,7 +779,10 @@ export const ChatMinimap = memo(function ChatMinimap({
                         type="button"
                         className={styles.assistantJump}
                         data-minimap-preview-assistant={`${node.index}-${assistantIndex}`}
-                        onClick={() => scrollToAssistant(node, assistantIndex)}
+                        onClick={() => {
+                          scrollToAssistant(node, assistantIndex);
+                          setPreviewOpen(false);
+                        }}
                         aria-label={t("chatMinimap.locateAssistant")}
                         title={t("chatMinimap.locateAssistant")}
                       >
@@ -836,10 +790,14 @@ export const ChatMinimap = memo(function ChatMinimap({
                       </button>
                       <AssistantOutline
                         markdown={assistant.markdown}
-                        onAnswerClick={() => scrollToAssistant(node, assistantIndex)}
-                        onHeadingClick={(headingIndex) => (
-                          scrollToHeading(node, assistantIndex, headingIndex)
-                        )}
+                        onAnswerClick={() => {
+                          scrollToAssistant(node, assistantIndex);
+                          setPreviewOpen(false);
+                        }}
+                        onHeadingClick={(headingIndex) => {
+                          scrollToHeading(node, assistantIndex, headingIndex);
+                          setPreviewOpen(false);
+                        }}
                       />
                     </div>
                   ))}

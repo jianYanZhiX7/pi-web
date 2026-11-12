@@ -102,9 +102,9 @@
   display: block;
   width: calc(100% + 34px);
   min-height: 32px;
-  max-height: 86px;
+  max-height: 92px;
   margin: 0 0 0 -34px;
-  padding: 7px 10px 7px 40px;
+  padding: 6px 10px 6px 40px;
   border: 0;
   border-radius: 0;
   background: transparent;
@@ -117,21 +117,24 @@
   text-align: left;
   cursor: pointer;
   overflow: hidden;
-  transition: background 100ms ease;
 }
 
 .userText {
   display: -webkit-box;
+  padding: 4px 8px;
+  border-radius: var(--radius-md);
+  background: var(--user-bg);
   overflow: hidden;
   overflow-wrap: anywhere;
   white-space: pre-wrap;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 4;
   line-clamp: 4;
+  transition: background 100ms ease;
 }
 
-.user:hover {
-  background: color-mix(in srgb, var(--text) 6%, transparent);
+.user:hover .userText {
+  background: color-mix(in srgb, var(--text) 6%, var(--user-bg));
 }
 
 .assistant {
@@ -256,7 +259,6 @@
   line-height: 28px;
 }
 
-.user:focus-visible,
 .heading:focus-visible,
 .paragraph:focus-visible {
   outline: 0;
@@ -264,48 +266,15 @@
   box-shadow: inset 2px 0 0 color-mix(in srgb, var(--text-muted) 65%, transparent);
 }
 
+.user:focus-visible {
+  outline: 0;
+}
+
+.user:focus-visible .userText {
+  box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--text-muted) 65%, transparent);
+}
+
 .assistantJump:focus-visible {
-  outline: 1px solid color-mix(in srgb, var(--text-muted) 65%, transparent);
-  outline-offset: 1px;
-}
-
-/* Lock toggle at the bottom of the rail: while locked, the preview panel
-   does not pop out on hover. */
-.lock {
-  position: absolute;
-  bottom: 6px;
-  left: 50%;
-  z-index: 3;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 30px;
-  height: 30px;
-  padding: 0;
-  border: 0;
-  border-radius: var(--radius-md);
-  background: transparent;
-  color: var(--text-dim);
-  cursor: pointer;
-  transform: translateX(-50%);
-  transition: color 100ms ease, background 100ms ease;
-}
-
-.lock:hover {
-  color: var(--text);
-  background: color-mix(in srgb, var(--text) 6%, transparent);
-}
-
-/* A locked padlock is gold. */
-.lock[aria-pressed="true"] {
-  color: #d4af37;
-}
-
-.lock[aria-pressed="true"]:hover {
-  color: #e6c65a;
-}
-
-.lock:focus-visible {
   outline: 1px solid color-mix(in srgb, var(--text-muted) 65%, transparent);
   outline-offset: 1px;
 }

@@ -83,7 +83,7 @@
     --accent: var(--blue-500);
     --accent-hover: var(--blue-600);
     --accent-contrast: var(--white);
-    --user-bg: var(--blue-50);
+    --user-bg: var(--blue-100);
     --assistant-bg: var(--white);
     --tool-bg: var(--gray-50);
     --bg-subtle: rgba(61, 58, 58, 0.035);
@@ -111,7 +111,7 @@
     --accent: #7aa5ff;
     --accent-hover: #a2c0ff;
     --accent-contrast: var(--blue-950);
-    --user-bg: #23272e;
+    --user-bg: #1c2842;
     --assistant-bg: var(--gray-900);
     --tool-bg: #201f1e;
     --bg-subtle: rgba(239, 237, 236, 0.04);

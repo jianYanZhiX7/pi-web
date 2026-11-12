@@ -101,7 +101,7 @@ interface Props {
   /** Keeps the completion sound's audio running until the returned release is called. */
   holdAudio?: () => () => void;
 }
-const CHAT_MINIMAP_WIDTH = 36;
+const CHAT_MINIMAP_WIDTH = 28;
 const CHAT_COLUMN_PADDING = 16;
 
 function hasFinalAssistantAnswer(message: AgentMessage): boolean {

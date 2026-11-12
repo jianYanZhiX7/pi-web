@@ -279,7 +279,7 @@ try {
       await node.waitFor();
       const rect = await node.boundingBox();
       assert.ok(rect);
-      await page.mouse.move(rect.x + rect.width / 2, rect.y + rect.height / 2);
+      await page.mouse.click(rect.x + rect.width / 2, rect.y + rect.height / 2);
       const preview = page.locator("[data-minimap-preview-box]");
       const turn = preview.locator("[data-minimap-preview-index]").filter({ hasText: text(4998) });
       const result = {
@@ -287,7 +287,7 @@ try {
         earlier: await preview.locator("[data-minimap-preview-earlier]").textContent(),
       };
       await page.screenshot({ path: join(artifacts, screenshot) });
-      await page.mouse.move(0, 0);
+      await page.keyboard.press("Escape");
       await preview.waitFor({ state: "detached" });
       return result;
     };
@@ -406,7 +406,7 @@ try {
       await node.waitFor();
       const rect = await node.boundingBox();
       assert.ok(rect);
-      await page.mouse.move(rect.x + rect.width / 2, rect.y + rect.height / 2);
+      await page.mouse.click(rect.x + rect.width / 2, rect.y + rect.height / 2);
       const preview = page.locator("[data-minimap-preview-box]");
       await preview.getByRole("button", { name: "E2E compaction anchor", exact: true }).waitFor();
       await preview.getByRole("button", { name: "E2E compacted heading", exact: true }).click();
