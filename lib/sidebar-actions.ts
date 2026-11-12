@@ -6,10 +6,12 @@
  * (it copies the finished entries of its current branch), so it is offered
  * everywhere: while the family runs and from the archive too. Open in new tab
  * only navigates (a browser tab loads the session's link): it is offered
- * everywhere a saved session is, after the actions that manage the session and
- * before Delete. Never first: a menu's first item takes focus when it opens,
- * so Enter right after opening would leave the tab. Also the requests behind
- * a project group's "Delete all sessions", with `fetch` passed in.
+ * everywhere a saved session is, after the actions that manage the session,
+ * with Full history (the exported HTML in a tab of its own) and Generate title
+ * (the server names the session from its transcript) under it, and before
+ * Delete. Never first: a menu's first item takes focus when it opens, so Enter
+ * right after opening would leave the tab. Also the requests behind a project
+ * group's "Delete all sessions", with `fetch` passed in.
  */
 
 import { projectNameOf, type SidebarFamilyStatus, type SidebarProject, type SidebarRow } from "./session-tree";
@@ -17,6 +19,8 @@ import type { SessionUiStateRequest } from "./session-ui-state-shared";
 
 export type SessionMenuActionId =
   | "open-new-tab"
+  | "full-history"
+  | "generate-title"
   | "pin"
   | "unpin"
   | "rename"
@@ -28,21 +32,27 @@ export type SessionMenuActionId =
   | "delete";
 
 export type SessionMenuEntry =
-  | { kind: "action"; id: SessionMenuActionId; shortcut: string; disabledReason?: "running" }
+  | { kind: "action"; id: SessionMenuActionId; shortcut: string; disabledReason?: "running" | "noMessages" }
   | { kind: "separator" };
 
 /**
  * A session row's built-in menu. A transient session has no file yet, so it
- * gets none: pin, archive, rename, fork and delete would all act on a missing
- * file, and another tab could not load it.
+ * gets none: pin, archive, rename, fork, full history, generate title and
+ * delete would all act on a missing file, and another tab could not load it.
  * In the archive view, Pin also restores (pin and archive exclude each other).
+ * Generate title waits for a message to name the session from.
  */
 export function sessionMenuEntries(
   context: Extract<SidebarRow, { kind: "session" }>["context"],
   status: SidebarFamilyStatus,
+  hasMessages: boolean,
 ): SessionMenuEntry[] {
   if (status.transient) return [];
   const openNewTab: SessionMenuEntry = { kind: "action", id: "open-new-tab", shortcut: "T" };
+  const fullHistory: SessionMenuEntry = { kind: "action", id: "full-history", shortcut: "H" };
+  const generateTitle: SessionMenuEntry = hasMessages
+    ? { kind: "action", id: "generate-title", shortcut: "G" }
+    : { kind: "action", id: "generate-title", shortcut: "G", disabledReason: "noMessages" };
   if (context === "archive") {
     return [
       { kind: "action", id: "unarchive", shortcut: "A" },
@@ -50,6 +60,8 @@ export function sessionMenuEntries(
       { kind: "action", id: "rename", shortcut: "R" },
       { kind: "action", id: "fork", shortcut: "F" },
       openNewTab,
+      fullHistory,
+      generateTitle,
       { kind: "separator" },
       { kind: "action", id: "delete", shortcut: "D" },
     ];
@@ -64,6 +76,8 @@ export function sessionMenuEntries(
       ? { kind: "action", id: "archive", shortcut: "A", disabledReason: "running" }
       : { kind: "action", id: "archive", shortcut: "A" },
     openNewTab,
+    fullHistory,
+    generateTitle,
     { kind: "separator" },
     { kind: "action", id: "delete", shortcut: "D" },
   ];

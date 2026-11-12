@@ -133,6 +133,28 @@ export function OpenInNewTabIcon(props: SidebarIconProps) {
   );
 }
 
+/** A clock with its hand turned back: a session row's "Full history". */
+export function HistoryIcon(props: SidebarIconProps) {
+  return (
+    <SidebarIcon {...props}>
+      <path d="M3 12a9 9 0 1 0 3-6.7L3 8" />
+      <path d="M3 3v5h5" />
+      <path d="M12 7v5l3 2" />
+    </SidebarIcon>
+  );
+}
+
+/** A pen with a spark: a session row's "Generate title". */
+export function GenerateTitleIcon(props: SidebarIconProps) {
+  return (
+    <SidebarIcon {...props}>
+      <path d="m15 4 5 5L7 22l-5-5Z" />
+      <path d="m14 5 5 5" />
+      <path d="M6 4V2M5 3H3M19 19v3M17.5 20.5h3" />
+    </SidebarIcon>
+  );
+}
+
 export function TrashIcon(props: SidebarIconProps) {
   return (
     <SidebarIcon {...props}>

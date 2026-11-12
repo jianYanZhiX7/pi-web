@@ -114,6 +114,8 @@ import {
   EyeIcon,
   FilterIcon,
   FolderIcon,
+  GenerateTitleIcon,
+  HistoryIcon,
   MessageIcon,
   MoreIcon,
   ForkIcon,
@@ -349,6 +351,8 @@ const SIDEBAR_HEADER_HEIGHT = 36;
 
 const SESSION_ACTION_LABEL_KEYS: Record<SessionMenuActionId, string> = {
   "open-new-tab": "sidebar.openInNewTab",
+  "full-history": "history.label",
+  "generate-title": "title.generate",
   pin: "sidebar.pin",
   unpin: "sidebar.unpin",
   rename: "sidebar.rename",
@@ -363,6 +367,8 @@ const SESSION_ACTION_LABEL_KEYS: Record<SessionMenuActionId, string> = {
 function sessionActionIcon(id: SessionMenuActionId): ReactNode {
   switch (id) {
     case "open-new-tab": return <OpenInNewTabIcon />;
+    case "full-history": return <HistoryIcon />;
+    case "generate-title": return <GenerateTitleIcon />;
     case "pin": return <PinIcon />;
     case "unpin": return <PinOffIcon />;
     case "rename": return <PencilIcon />;
@@ -2064,10 +2070,44 @@ export function SessionSidebar({ selectedSessionId, onSelectSession, onNewSessio
     window.open(sessionDeepLink(family.root.id), "_blank", "noopener,noreferrer");
   }, []);
 
+  // Full history (the row menu's H): the session's exported HTML in a browser
+  // tab of its own (the route's `inline=1`), by the same synchronous
+  // `window.open()` as Open in new tab.
+  const openFamilyHistory = useCallback((family: SessionFamily) => {
+    if (family.root.transient) return;
+    window.open(`/api/sessions/${encodeURIComponent(family.root.id)}/export?inline=1`, "_blank", "noopener,noreferrer");
+  }, []);
+
+  // Generate title (the row menu's G): the server names the session from its
+  // transcript (POST /api/sessions/[id]/auto-name); the listing that follows
+  // carries the name to the row and, through AppShell's catalogue merge, to
+  // the open chat. One request per session at a time, when it is the selected
+  // one too; the toast says how it went.
+  const namingIdsRef = useRef(new Set<string>());
+  const generateFamilyTitle = useCallback(async (family: SessionFamily) => {
+    const session = family.root;
+    if (session.transient || namingIdsRef.current.has(session.id)) return;
+    namingIdsRef.current.add(session.id);
+    showToast(t("title.generating"));
+    try {
+      const res = await fetch(`/api/sessions/${encodeURIComponent(session.id)}/auto-name`, { method: "POST" });
+      const data = await res.json().catch(() => ({})) as { title?: string; error?: string };
+      if (!res.ok || !data.title) throw new Error(data.error || `HTTP ${res.status}`);
+      void loadSessions();
+      showToast(t("title.updated"));
+    } catch (error) {
+      showToast(t("title.failed", { error: error instanceof Error ? error.message : String(error) }));
+    } finally {
+      namingIdsRef.current.delete(session.id);
+    }
+  }, [loadSessions, showToast, t]);
+
   const runSessionAction = (id: SessionMenuActionId, row: SessionRow, shiftKey: boolean) => {
     const { family } = row;
     switch (id) {
       case "open-new-tab": openFamilyInNewTab(family); break;
+      case "full-history": openFamilyHistory(family); break;
+      case "generate-title": void generateFamilyTitle(family); break;
       case "pin": setFamilyPinned(family, true); break;
       case "unpin": setFamilyPinned(family, false); break;
       case "rename": startRename(family); break;
@@ -2381,7 +2421,7 @@ export function SessionSidebar({ selectedSessionId, onSelectSession, onNewSessio
     else filesPickerRef.current?.button("project")?.focus({ preventScroll: true });
   }, [filesShown, filesFocusRequest]);
 
-  const sessionMenuItems = (row: SessionRow): SidebarMenuItem[] => sessionMenuEntries(row.context, row.status).map((entry, index) => {
+  const sessionMenuItems = (row: SessionRow): SidebarMenuItem[] => sessionMenuEntries(row.context, row.status, row.family.root.messageCount > 0).map((entry, index) => {
     if (entry.kind === "separator") return { type: "separator", id: `separator-${index}` };
     const label = t(SESSION_ACTION_LABEL_KEYS[entry.id]);
     return {
@@ -2392,7 +2432,11 @@ export function SessionSidebar({ selectedSessionId, onSelectSession, onNewSessio
       shortcut: entry.shortcut,
       danger: entry.id === "delete",
       disabled: entry.disabledReason !== undefined,
-      disabledReason: entry.disabledReason === "running" ? t("sidebar.cannotArchiveRunning") : undefined,
+      disabledReason: entry.disabledReason === "running"
+        ? t("sidebar.cannotArchiveRunning")
+        : entry.disabledReason === "noMessages"
+          ? t("sidebar.noMessages")
+          : undefined,
       onSelect: ({ shiftKey }) => runSessionAction(entry.id, row, shiftKey),
     };
   });
