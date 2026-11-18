@@ -1122,3 +1122,29 @@ test("grows the composer to its text and hides the scrollbar until the text is t
   assert.equal(tall.style.height, "200px", "the box caps at 200 px");
   assert.equal(tall.style.overflowY, "auto", "capped text scrolls");
 });
+
+test("shows the fresh composer's git branch at the bottom of the input, and nothing without one", () => {
+  const render = (props) => renderToStaticMarkup(
+    React.createElement(
+      I18nProvider,
+      null,
+      React.createElement(ChatInput, {
+        onSend() {},
+        onAbort() {},
+        isStreaming: false,
+        ...props,
+      }),
+    ),
+  );
+
+  const html = render({ gitBranch: "feature/x" });
+  assert.match(html, /class="chat-git-branch"/);
+  assert.match(html, /title="Git branch: feature\/x"/);
+  assert.match(html, />feature\/x</);
+  // Inside the controls row, not beside the draft's send button.
+  assert.ok(html.indexOf('class="chat-git-branch"') > html.indexOf('class="chat-input-controls"'));
+
+  assert.doesNotMatch(render({}), /chat-git-branch/);
+  // `sub-agent` and empty strings name no checkout.
+  assert.doesNotMatch(render({ gitBranch: "" }), /chat-git-branch/);
+});

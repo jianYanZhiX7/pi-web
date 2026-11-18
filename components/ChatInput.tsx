@@ -36,6 +36,7 @@ import { useFontPreferences } from "@/hooks/useFontPreferences";
 import type { ToolPreset } from "@/lib/tool-presets";
 import { SelectorRow } from "./SelectorRow";
 import { ModelSelector, type ModelSelectorOption } from "./ModelSelector";
+import { BranchIcon } from "./SidebarIcons";
 
 export { filterModelOptions } from "./ModelSelector";
 
@@ -107,6 +108,8 @@ interface Props {
   draftKey?: string;
   /** Session working directory — enables the @ file autocomplete menu */
   cwd?: string | null;
+  /** The branch of `cwd`, at the controls row's left end. */
+  gitBranch?: string | null;
   /** Files picked with the attach button, handled like files dropped onto the chat. Without it the button takes images only. */
   onAttachFiles?: (files: File[]) => void;
 }
@@ -704,6 +707,7 @@ export const ChatInput = memo(forwardRef<ChatInputHandle, Props>(function ChatIn
   onPromptWithStreamingBehavior,
   draftKey,
   cwd,
+  gitBranch,
   onAttachFiles,
   compact = false,
 }: Props, ref) {
@@ -2578,6 +2582,32 @@ export const ChatInput = memo(forwardRef<ChatInputHandle, Props>(function ChatIn
                 allOptions={allModelList?.map((m) => ({ provider: m.provider, providerName: m.providerName, modelId: m.id, name: m.name }))}
                 onShowAll={onLoadAllModels}
               />
+            )}
+            {/* The checkout's branch: context, not a control, so it sits with
+                the left group's buttons and gives way before them. */}
+            {gitBranch && (
+              <span
+                className="chat-git-branch"
+                title={t("chat.gitBranch", { branch: gitBranch })}
+                style={{
+                  flexShrink: 0,
+                  minWidth: 0,
+                  maxWidth: isMobile ? 96 : 180,
+                  height: controlSize,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 5,
+                  padding: isMobile ? "0 4px" : "0 8px",
+                  borderRadius: "var(--radius-md)",
+                  color: "var(--text-dim)",
+                  fontFamily: "var(--font-mono)",
+                  fontSize: 11,
+                  whiteSpace: "nowrap",
+                }}
+              >
+                <BranchIcon size={11} />
+                <span style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis" }}>{gitBranch}</span>
+              </span>
             )}
           </div>
 

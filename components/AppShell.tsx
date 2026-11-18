@@ -1454,9 +1454,21 @@ export function AppShell() {
   const handleNewSessionBarFocusDone = useCallback(() => {
     newSessionBarFocusRef.current = null;
   }, []);
-  const newSessionContextBar = selectedSession === null && effectiveNewSessionCwd ? (
+  const newSessionContext = selectedSession === null && effectiveNewSessionCwd
+    ? contextForCwd(sidebarNewSessionContext, effectiveNewSessionCwd, newSessionMoveRef.current)
+    : null;
+  // The branch at the bottom of the composer's input: the open chat's
+  // checkout first, then any session's of that folder (a subdirectory has no
+  // checkout list to name its branch), and for a fresh composer the bar's
+  // listing, including a worktree just created.
+  const composerBranch = selectedSession
+    ? cwdBranch(selectedSession.cwd, { selected: selectedSession, sessions: sessionCatalog, context: sidebarNewSessionContext })
+    : newSessionContext
+      ? cwdBranch(newSessionContext.cwd, { selected: null, sessions: sessionCatalog, context: newSessionContext })
+      : null;
+  const newSessionContextBar = newSessionContext ? (
     <NewSessionContextBar
-      context={contextForCwd(sidebarNewSessionContext, effectiveNewSessionCwd, newSessionMoveRef.current)}
+      context={newSessionContext}
       mobile={isMobile}
       initialFocus={newSessionBarFocusRef.current}
       onInitialFocusDone={handleNewSessionBarFocusDone}
@@ -2639,6 +2651,7 @@ export function AppShell() {
               sessionRunning={Boolean(selectedSession && runningSessionIds.has(selectedSession.id))}
               newSessionCwd={effectiveNewSessionCwd}
               newSessionDraftKey={newSessionDraftKey}
+              gitBranch={composerBranch}
               newSessionContextBar={newSessionContextBar}
               initialNewSessionChoices={selectedSession === null ? carriedNewSessionChoices : null}
               onNewSessionChoicesChange={handleNewSessionChoicesChange}
