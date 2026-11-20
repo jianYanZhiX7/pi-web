@@ -717,6 +717,10 @@ export const ChatInput = memo(forwardRef<ChatInputHandle, Props>(function ChatIn
   const isMobile = useIsMobile();
   // The controls row under the composer: a finger's 44px on a phone.
   const controlSize = isMobile ? 44 : 32;
+  // Its labels: one step under the composer's 13px body, and its meta (the
+  // checkout's branch) a step under those.
+  const footerFontSize = 11;
+  const footerMetaFontSize = 10;
   // The composer's own action buttons (send, steer, follow-up, stop): icons
   // only, square, so the draft keeps the width of a narrow composer.
   const actionSize = isMobile ? 40 : 34;
@@ -2524,7 +2528,7 @@ export const ChatInput = memo(forwardRef<ChatInputHandle, Props>(function ChatIn
 
         {/* Bash mode status label */}
         {bashMode && (
-          <div className="text-xs px-2 py-1" style={{ color: bashExcluded ? "var(--text-muted)" : "var(--accent)", marginTop: 4 }}>
+          <div className="px-2 py-1" style={{ color: bashExcluded ? "var(--text-muted)" : "var(--accent)", fontSize: footerFontSize, marginTop: 4 }}>
              {t("chat.shell")} · {bashExcluded ? t("chat.outputLocal") : t("chat.outputModel")}
           </div>
         )}
@@ -2601,7 +2605,7 @@ export const ChatInput = memo(forwardRef<ChatInputHandle, Props>(function ChatIn
                   borderRadius: "var(--radius-md)",
                   color: "var(--text-dim)",
                   fontFamily: "var(--font-mono)",
-                  fontSize: 11,
+                  fontSize: footerMetaFontSize,
                   whiteSpace: "nowrap",
                 }}
               >
@@ -2646,7 +2650,7 @@ export const ChatInput = memo(forwardRef<ChatInputHandle, Props>(function ChatIn
                   borderRadius: "var(--radius-md)",
                   color: "var(--text-muted)",
                   cursor: controlsMenuOpen ? "default" : "pointer",
-                  fontSize: 12,
+                  fontSize: footerFontSize,
                   fontWeight: 500,
                   visibility: controlsMenuOpen ? "hidden" : "visible",
                   pointerEvents: controlsMenuOpen ? "none" : "auto",
@@ -2705,7 +2709,7 @@ export const ChatInput = memo(forwardRef<ChatInputHandle, Props>(function ChatIn
                     borderRadius: "var(--radius-md)",
                     color: "var(--text-muted)",
                     cursor: "pointer",
-                    fontSize: 12,
+                    fontSize: footerFontSize,
                     transition: "background 0.12s, color 0.12s",
                   }}
                   onMouseEnter={(e) => {
@@ -2803,7 +2807,7 @@ export const ChatInput = memo(forwardRef<ChatInputHandle, Props>(function ChatIn
                     borderRadius: "var(--radius-md)",
                     color: "var(--text-muted)",
                     cursor: isStreaming ? "not-allowed" : "pointer",
-                    fontSize: 12,
+                    fontSize: footerFontSize,
                     opacity: isStreaming ? 0.5 : 1,
                     transition: "background 0.12s, color 0.12s",
                   }}
@@ -2885,7 +2889,7 @@ export const ChatInput = memo(forwardRef<ChatInputHandle, Props>(function ChatIn
                     borderRadius: "var(--radius-md)",
                     color: isCompacting ? "var(--danger)" : "var(--text-muted)",
                     cursor: "pointer",
-                    fontSize: 12,
+                    fontSize: footerFontSize,
                     transition: "background 0.12s, color 0.12s",
                   }}
                   onMouseEnter={(e) => {

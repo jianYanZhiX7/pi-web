@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { useI18n } from "@/hooks/useI18n";
 import { useIsMobile } from "@/hooks/useIsMobile";
+import { displayModelName } from "@/lib/model-display-name";
 import { SelectorRow } from "./SelectorRow";
 
 export interface ModelSelectorOption {
@@ -124,6 +125,9 @@ export function ModelSelector({
   const currentName = selectedLabel ?? (value
     ? (isListed(options, value) ?? isListed(allOptions, value))?.name ?? value.modelId
     : emptyLabel ?? (options.length > 0 ? t("chat.selectModel") : t("chat.noModels")));
+  // The composer's label drops a provider's " · <vendor>" suffix; the picker's
+  // rows keep the whole name, where the vendors inside one provider differ.
+  const triggerName = displayModelName(currentName);
 
   useEffect(() => {
     const handleOutsideClick = (event: MouseEvent) => {
@@ -204,7 +208,7 @@ export function ModelSelector({
         background: open ? "var(--bg-hover)" : "none",
         color: "var(--text-muted)",
         cursor: locked ? "not-allowed" : "pointer",
-        fontSize: 12,
+        fontSize: 11,
         opacity: locked ? 0.5 : 1,
         transition: "background 0.12s, color 0.12s",
       };
@@ -283,7 +287,7 @@ export function ModelSelector({
             <line x1="1" y1="9" x2="4" y2="9" /><line x1="1" y1="14" x2="4" y2="14" />
           </svg>
         )}
-        <span style={{ flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{currentName}</span>
+        <span style={{ flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{triggerName}</span>
         {variant === "field" && (
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ flexShrink: 0, color: "var(--text-dim)" }}>
             <polyline points="6 9 12 15 18 9" />
