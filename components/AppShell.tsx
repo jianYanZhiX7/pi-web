@@ -1769,7 +1769,7 @@ export function AppShell() {
   const renderChatToolbarActions = (mobile: boolean) => {
     if (!mobile && !showChat) return null;
     return (
-      <div style={{ display: "flex", alignItems: "stretch", height: "100%" }}>
+      <div style={{ display: "flex", alignItems: "center", height: "100%" }}>
         {!(mobile && isNarrowMobile) && renderAgentsButton(mobile)}
         {sessionHasBranches && (mobile ? (
           <button
@@ -2292,7 +2292,7 @@ export function AppShell() {
               style={{
                 position: "relative",
                 display: "flex",
-                alignItems: "stretch",
+                alignItems: "center",
                 flex: 1,
                 minWidth: 0,
                 height: "100%",
@@ -2348,7 +2348,7 @@ export function AppShell() {
                     left: `calc(2 * ${TOP_BAR_ICON_BUTTON_SIZE})`,
                     zIndex: 20,
                     display: "flex",
-                    alignItems: "stretch",
+                    alignItems: "center",
                     // More buttons than a 320px phone fits (the Debug button made seven): scroll, never clip.
                     overflowX: "auto",
                     overflowY: "hidden",
