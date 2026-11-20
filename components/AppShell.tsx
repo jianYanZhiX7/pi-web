@@ -81,7 +81,7 @@ import type { FileViewerState } from "@/lib/file-viewer-state";
 import { PRESET_READ_ONLY, type ToolEntry } from "@/lib/tool-presets";
 import { createSideChat, deleteSideChat } from "@/lib/side-chat-client";
 import { getAgentsBadge, getSessionFamily, isHiddenRelation, sideChatTitle } from "@/lib/session-family";
-import { getLastSettingsSection, settingsSectionRequiresProject, type SettingsSection } from "@/lib/settings-navigation";
+import { getLastSettingsSection, type SettingsSection } from "@/lib/settings-navigation";
 import { focusIfLost } from "@/lib/stacked-dialog";
 
 type SessionCopyField = "file" | "id" | "projectDir" | "gitBranch" | "gitWorktree";
@@ -1599,35 +1599,7 @@ export function AppShell() {
         onRunningSessionIdsChange={handleRunningSessionIdsChange}
         onSessionsChange={handleSessionsChange}
       />
-      <div style={{ padding: "8px", flexShrink: 0, display: "flex", justifyContent: "space-between", gap: 4 }}>
-        {([
-          ["models", translate("common.models")],
-          ["skills", translate("common.skills")],
-        ] as const).map(([section, label]) => {
-          const disabled = settingsSectionRequiresProject(section) && !projectTrustCwd;
-          return (
-            <button
-              key={section}
-              type="button"
-              onClick={() => openSettingsSection(section)}
-              disabled={disabled}
-              title={disabled ? translate("settings.projectRequired") : label}
-              aria-label={label}
-              style={{
-                flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
-                height: 32, padding: 0, background: "none", border: "none",
-                borderRadius: "var(--radius-md)", color: "var(--text-muted)", cursor: disabled ? "default" : "pointer",
-                fontSize: 12, opacity: disabled ? 0.35 : 1,
-                transition: "background 0.12s, color 0.12s",
-              }}
-              onMouseEnter={(event) => { if (!disabled) { event.currentTarget.style.background = "var(--bg-hover)"; event.currentTarget.style.color = "var(--text)"; } }}
-              onMouseLeave={(event) => { event.currentTarget.style.background = "none"; event.currentTarget.style.color = "var(--text-muted)"; }}
-            >
-              <SettingsSectionIcon section={section} size={14} strokeWidth={2} />
-              <span>{label}</span>
-            </button>
-          );
-        })}
+      <div style={{ padding: "8px", flexShrink: 0, display: "flex", gap: 4 }}>
         <button
           type="button"
           onClick={() => {
